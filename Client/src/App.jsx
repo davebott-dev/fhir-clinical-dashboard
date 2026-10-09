@@ -6,20 +6,22 @@ function App() {
   const [patientId, setPatientId] = useState('');
 
  // Basic React code for fetch and displaying patient data to test fhir client
+
+ // Function to fetch patient data from FHIR server based on patient ID
   const fetchPatientData = async(patientId) => {
     try {
       const response = await fetch(`https://hapi.fhir.org/baseR4/Patient/${patientId}`, 
         {
-          method: 'GET',
+          method: 'GET', //get request
           headers: {
-            'Content-Type': 'application/fhir+json'
+            'Content-Type': 'application/fhir+json' //set the content type for FHIR JSON data
           }
         }
       );
     const patient_data = await response.json();
     console.log(patient_data);
-    if(response.ok) {
-      setData(patient_data);
+    if(response.ok) { //check if the response is successful
+      setData(patient_data); //store data in Data state defined above
     } else {
       console.error('Error fetching patient data:', patient_data);
     }
@@ -32,7 +34,7 @@ function App() {
     <>
       <h1>FHIR Clinical Dashboard</h1>
 
-      {data && (
+      {data && ( // display patient data if available
         <div>
           <h2>Patient Data:</h2>
           <p>Patient ID: {data.id}</p>
@@ -43,8 +45,10 @@ function App() {
         </div>
       )}
       
-      <input type="text" value = {patientId} onChange = {(e)=> setPatientId(e.target.value)}/>
-      <button onClick= {() => fetchPatientData(patientId)}> Search Patient</button>
+      <input type="text" value = {patientId} onChange = {(e)=> setPatientId(e.target.value) //update patientId state on input change
+      }/> 
+      <button onClick= {() => fetchPatientData(patientId) //call fetchPatientData function with the current patientID
+      }> Search Patient</button>
     </>
   )
 }
