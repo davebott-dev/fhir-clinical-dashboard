@@ -6,6 +6,7 @@ import PatientSearch from './routes/patientSearch.jsx';
 import PatientOverview from './routes/patientOverview.jsx';
 import ObservationList from './routes/observationList.jsx';
 import MedicationList from './routes/medicationList.jsx';
+import Dashboard from './routes/dashboard.jsx';
 import Index from './routes/index.jsx';
 import './index.css';
 
@@ -19,20 +20,24 @@ const router = createBrowserRouter([
         element: <Index />
       },
       {
-        path: '/patientSearch',
+        path: 'patientSearch',
         element: <PatientSearch />
       },
       {
-        path: '/patientOverview',
+        path: 'patientOverview',
         element: <PatientOverview />
       },
       {
-        path: '/observationList',
+        path: 'observationList',
         element: <ObservationList />
       },
       {
         path: 'medicationList',
         element: <MedicationList />
+      },
+      {
+        path: 'dashboard',
+        element: <Dashboard />
       }
     ]
   }
