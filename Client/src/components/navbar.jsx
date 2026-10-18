@@ -63,7 +63,7 @@ function Navbar() {
 
                         <div className="hidden text-left sm:block">
                             <p className="text-sm font-semibold text-slate-800">
-                                User Name
+                                Dr. John Doe
                             </p>
                             <p className="text-xs text-slate-500">
                                 Clinical Dashboard
