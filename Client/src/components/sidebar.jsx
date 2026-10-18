@@ -17,6 +17,10 @@ function Sidebar() {
         Workspace
       </p>
       <nav className = "flex flex-col gap-2">
+        <NavLink to="/">
+          <span className="text-lg">🏠</span>
+          <span>Home</span>
+        </NavLink>
         <NavLink to="/patientSearch">
           <span className="text-lg">⌕</span>
           <span>Patient Search</span>
