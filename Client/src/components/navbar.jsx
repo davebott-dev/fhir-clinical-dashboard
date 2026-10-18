@@ -1,8 +1,8 @@
 function Navbar() {
     //tailwind css and svg tags created with help of tailwind css
     return(
-        <header className = "sticky top-0 z-20 border-b border-slate-200 bg-white/95 shadow-sm backdrop blur"> 
-        <div className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 shadow-sm backdrop blur">
+        <header className = "sticky top-0 z-20 border-b border-slate-200 bg-white/95 shadow-sm backdrop"> 
+        <div className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 shadow-sm">
             <div className="flex items-center justify-between p-4 h-20 sm:px-8">
                 <div className="flex items-center w-full max-w-xl gap-3 rounded-xl border border-slate-300 bg-white p-2 shadow-sm">
                     <input type="text" placeholder="Search patients by name, ID, or email..." className="bg-transparent border-none focus:outline-none min-w-0 flex-1 text-sm text-slate-600 placeholder:text-slate-400" />
