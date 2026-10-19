@@ -41,6 +41,11 @@ function Sidebar() {
           <span>Medication List</span>
         </NavLink>
 
+        <NavLink to="/encounterHistory">
+          <span className="text-lg">📅</span>
+          <span>Encounter History</span>
+        </NavLink>
+
       </nav>
 
       <div className ="mt-auto pt-8">
