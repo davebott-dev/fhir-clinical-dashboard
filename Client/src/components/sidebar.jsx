@@ -22,7 +22,7 @@ function Sidebar() {
           <span>Home</span>
         </NavLink>
         <NavLink to="/patientSearch">
-          <span className="text-lg">⌕</span>
+          <span className="text-lg">🔎</span>
           <span>Patient Search</span>
         </NavLink>
         
