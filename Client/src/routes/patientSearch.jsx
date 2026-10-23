@@ -23,11 +23,24 @@ const labelClass =
  // Basic React code for fetch and displaying patient data to test fhir client
 
  // Function to fetch patient data from FHIR server based on patient ID
-  const fetchPatientData = async(e, patientId) => {
+  const fetchPatientData = async(e) => {
     e.preventDefault(); // Prevent the default form submission behavior;
 
+    setLoading(true); // Set loading state to true while fetching data
+    setError(null); // Reset any previous error messages
+
+    // Construct the query string based on the provided patient details
+    let queryString = '';
+    patientGender ? queryString += `gender=${patientGender}&`: 
+    patientBirthDate ? queryString += `birthdate=${patientBirthDate}&`:
+    patientFirst ? queryString += `given=${patientFirst}&`:
+    patientLast ? queryString += `family=${patientLast}&`:
+    patientEmail ? queryString += `email=${patientEmail}&`: 
+    patientResourceType ? queryString += `resourceType=${patientResourceType}&`: 
+    patientId ? queryString += `_id=${patientId}`: '';
+
     try {
-      const response = await fetch(`https://hapi.fhir.org/baseR4/Patient/${patientId}`, 
+      const response = await fetch(`https://hapi.fhir.org/baseR4/Patient/_search?${queryString}`, 
         {
           method: 'GET', //get request
           headers: {
