@@ -31,15 +31,30 @@ const labelClass =
 
     // Construct the query string based on the provided patient details
     let queryString = '';
-    patientGender ? queryString += `gender=${patientGender}&`: 
-    patientBirthDate ? queryString += `birthdate=${patientBirthDate}&`:
-    patientFirst ? queryString += `given=${patientFirst}&`:
-    patientLast ? queryString += `family=${patientLast}&`:
-    patientEmail ? queryString += `email=${patientEmail}&`: 
-    patientResourceType ? queryString += `resourceType=${patientResourceType}&`: 
-    patientId ? queryString += `_id=${patientId}`: '';
+    if(patientGender){
+      queryString += `gender=${patientGender}&`;
+    }
+    if(patientBirthDate){
+      queryString += `birthdate=${patientBirthDate}&`;
+    }
+    if(patientFirst){
+      queryString += `name=${patientFirst}&`;
+    }
+    if(patientLast){
+      queryString += `family=${patientLast}&`;
+    }
+    if(patientEmail){
+      queryString += `email=${patientEmail}&`;
+    }
+    if(patientResourceType){
+      queryString += `resourceType=${patientResourceType}&`;
+    }
+    if(patientId){
+      queryString += `_id=${patientId}`;
+    }
 
     try {
+      console.log(`Fetching patient data with query: ${queryString}`);
       const response = await fetch(`https://hapi.fhir.org/baseR4/Patient/_search?${queryString}`, 
         {
           method: 'GET', //get request
@@ -90,9 +105,9 @@ const labelClass =
       </h1>
 
       <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 sm:text-base">
-        Search the FHIR server for a patient record using their
-        resource ID. You can also enter additional patient details
-        for reference.
+        Search the FHIR server for a patient by entering their details below. 
+        You can search by patient ID, first name, last name, email, resource type, 
+        gender, and date of birth.
       </p>
     </div>
 
@@ -114,7 +129,7 @@ const labelClass =
 
           <div>
             <label htmlFor="patientId" className={labelClass}>
-              Patient Resource ID <span className="text-red-500">*</span>
+              Patient Resource ID 
             </label>
             <input
               type="text"
@@ -123,7 +138,6 @@ const labelClass =
               onChange={(e) => setPatientId(e.target.value)}
               placeholder="e.g. 123"
               className={inputClass}
-              required
             />
           </div>
 
