@@ -299,6 +299,7 @@ const labelClass =
     </section>
 
     {/* Patient results */}
+    {/*update this block to show list of selectable patient records + display JSON in console instead of pre block*/}
     {data && (
       <section className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 px-5 py-5 sm:px-8">
