@@ -7,6 +7,7 @@ import PatientOverview from './routes/patientOverview.jsx';
 import ObservationList from './routes/observationList.jsx';
 import MedicationList from './routes/medicationList.jsx';
 import EncounterHistory from './routes/encounterHistory.jsx';
+import SearchResults from './routes/searchResults.jsx';
 import Index from './routes/index.jsx';
 import './index.css';
 
@@ -38,6 +39,10 @@ const router = createBrowserRouter([
       {
         path: 'encounterHistory',
         element: <EncounterHistory />
+      },
+      {
+        path: 'searchResults',
+        element: <SearchResults />
       }
     ]
   }
