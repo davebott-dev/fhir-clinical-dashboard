@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function PatientSearch() {
   const [data, setData] = useState(null);
@@ -11,6 +12,8 @@ function PatientSearch() {
   const [patientBirthDate, setPatientBirthDate] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  let navigate = useNavigate();
 
   //tailwind css and svg tags created with help of generative AI
   
@@ -67,6 +70,7 @@ const labelClass =
     console.log(patient_data);
     if(response.ok) { //check if the response is successful
       setData(patient_data); //store data in Data state defined above
+      navigate('/searchResults', { state: { patientData: patient_data } }); //navigate to search results page with the fetched data
     } else {
       console.error('Error fetching patient data:', patient_data);
     }
@@ -299,8 +303,7 @@ const labelClass =
     </section>
 
     {/* Patient results */}
-    {/*update this block to show list of selectable patient records + display JSON in console instead of pre block*/}
-    {data && (
+    {/* {data && (
       <section className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 px-5 py-5 sm:px-8">
           <h2 className="text-lg font-semibold text-slate-900">
@@ -329,7 +332,7 @@ const labelClass =
           </pre>
         </div>
       </section>
-    )}
+    )} */}
   </div>
 </main>
 
