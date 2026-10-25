@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function PatientSearch() {
-  const [data, setData] = useState(null);
   const [patientId, setPatientId] = useState('');
   const [patientFirst, setPatientFirst] = useState('');
   const [patientLast, setPatientLast] = useState('');
@@ -69,7 +68,6 @@ const labelClass =
     const patient_data = await response.json();
     console.log(patient_data);
     if(response.ok) { //check if the response is successful
-      setData(patient_data); //store data in Data state defined above
       navigate('/searchResults', { state: { patientData: patient_data } }); //navigate to search results page with the fetched data
     } else {
       console.error('Error fetching patient data:', patient_data);
