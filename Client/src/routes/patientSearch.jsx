@@ -245,10 +245,6 @@ const labelClass =
 
         {/* Form actions */}
         <div className="mt-8 flex flex-col-reverse gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-slate-500">
-            * Patient resource ID is required for this search.
-          </p>
-
           <button
             type="submit"
             disabled={loading}
@@ -301,38 +297,6 @@ const labelClass =
         </div>
       </form>
     </section>
-
-    {/* Patient results */}
-    {/* {data && (
-      <section className="mt-8 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 px-5 py-5 sm:px-8">
-          <h2 className="text-lg font-semibold text-slate-900">
-            Patient Record
-          </h2>
-          <p className="mt-1 text-sm text-slate-500">
-            FHIR resource returned by the server.
-          </p>
-        </div>
-
-        <div className="p-5 sm:p-8">
-          <div className="mb-5 flex flex-wrap items-center gap-3">
-            <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
-              Record retrieved
-            </span>
-            <span className="text-sm text-slate-500">
-              Resource type: {data.resourceType || 'Unknown'}
-            </span>
-            <span className="text-sm text-slate-500">
-              ID: {data.id || 'Unknown'}
-            </span>
-          </div>
-
-          <pre className="max-h-[32rem] overflow-auto rounded-xl bg-slate-950 p-4 text-xs leading-6 text-green-300 sm:p-6">
-            {JSON.stringify(data, null, 2)}
-          </pre>
-        </div>
-      </section>
-    )} */}
   </div>
 </main>
 
