@@ -11,6 +11,9 @@ function SearchResults(){
     const navigate = useNavigate();
     const {patientData} = location.state || {}; // Access the passed patient data from the state
     const entries = patientData?.entry || []; // Safely access the entry array from patientData using optional chaining
+    const entriesPerPage = 10; // Define how many entries to show per page
+    const totalPages = Math.ceil(entries.length/entriesPerPage); // Calculate total pages based on entries and entries per page
+    const paginatedEntries = entries.slice((page-1)*entriesPerPage, page*entriesPerPage); // Slice the entries array to get only the entries for the current page use array slice method
 
     const handlePageChange = (e,value) => {
         setPage(value); // Update the current page state when the pagination control is used
