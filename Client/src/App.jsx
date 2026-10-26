@@ -12,15 +12,14 @@ function App() {
   const showNavbar = !hideNavbarRoutes.includes(location.pathname) // Determine whether to show the Navbar based on the current route
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex h-screen overflow-hidden bg-gray-100">
       <Sidebar />
-      <main className="flex-1 p-6">
-        
-        <header className="mb-4">
-          <div>
-          {showNavbar && <Navbar />}
-          </div>
+      <main className="flex min-w-0 flex-1 flex-col overflow-y-auto p-6">
+          {showNavbar && (
+          <header className="mb-4 shrink-0">
+          <Navbar />
         </header>
+  )}
         <div className="p-4 sm:p-6 lg:p-8">
         <Outlet /> { /* Allows rendering of child routes based on the current route */ }
      </div>
