@@ -22,30 +22,37 @@ const router = createBrowserRouter([
         element: <Index />
       },
       {
-        path: 'patientSearch',
+        path: 'patient_search',
         element: <PatientSearch />
       },
-
+        {
+        path: 'search_results',
+        element: <SearchResults />
+      },
       {
-        path: 'patientOverview/:patientId',
+        path: 'patient',
+        element: <PatientLayout />,
+        children: [
+          {
+        path: 'overview/:patientId',
         element: <PatientOverview />
       },
       {
-        path: 'observationList/:patientId',
+        path: 'observations/:patientId',
         element: <ObservationList />
       },
       {
-        path: 'medicationList/:patientId',
+        path: 'medication-list/:patientId',
         element: <MedicationList />
       },
       {
-        path: 'encounterHistory/:patientId',
+        path: 'encounter-history/:patientId',
         element: <EncounterHistory />
-      },
-      {
-        path: 'searchResults',
-        element: <SearchResults />
       }
+        ]
+      }
+      
+    
     ]
   }
 ])
