@@ -63,7 +63,7 @@ function SearchResults(){
                 {/* Patient Results */}
                 {entries.length > 0 ? (
                     <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                        {entries.map((patient, index) => {
+                        {paginatedEntries.map((patient, index) => {
                             const resource = patient.resource;
                             const name = resource?.name?.[0];
 
@@ -86,6 +86,7 @@ function SearchResults(){
                                 <div
                                     key={resource?.id || index}
                                     className="group rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-blue-300 hover:shadow-md"
+                                    onClick={()=> navigate(`/patientOverview/${resource?.id}`, {state: {patientResource: resource}})}
                                 >
                                     {/* Card Header */}
                                     <div className="flex items-center gap-4">
@@ -159,15 +160,6 @@ function SearchResults(){
                                 </div>
                             );
                         })}
-                            <Stack spacing={2} className="mt-6">
-                                        <Pagination
-                                            count={10}
-                                            page={page}
-                                            onChange={handlePageChange}
-                                            variant="outlined"
-                                            shape="rounded"
-                                        />
-                                    </Stack>
                     </div>
                 ) : (
                     /* Empty State */
@@ -194,6 +186,16 @@ function SearchResults(){
                     </div>
                 )}
             </div>
+
+               <Stack spacing={2} className="mt-6 flex items-center justify-center">
+                                        <Pagination
+                                            count={totalPages}
+                                            page={page}
+                                            onChange={handlePageChange}
+                                            variant="outlined"
+                                            shape="rounded"
+                                        />
+                                    </Stack>
         </div>
     );
 }
