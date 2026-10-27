@@ -1,7 +1,9 @@
-import { NavLink } from 'react-router-dom';
-
+import { NavLink, useMatch} from 'react-router-dom';
 
 function Sidebar() {
+  const patientOverviewMatch = useMatch("/patient/:route/:patientId");
+  const patientId=  patientOverviewMatch?.params?.patientId; // Extract the patientId from the URL parameters using useMatch
+
   return (
     <aside className = "flex min-h-screen w-full shrink-0 flex-col bg-slate-950 p-5 text-white md:w-64">
       <div className ="mb-10 flex items-center gap-3 px-2 pt-2">
@@ -21,31 +23,35 @@ function Sidebar() {
           <span className="text-lg">🏠</span>
           <span>Home</span>
         </NavLink>
-        <NavLink to="/patientSearch">
+        <NavLink to="/patient_search">
           <span className="text-lg">🔎</span>
           <span>Patient Search</span>
         </NavLink>
         
-        <NavLink to="/patientOverview" >
-          <span className="text-lg">👁️</span>
-          <span>Patient Overview</span>
-        </NavLink>
+        {patientOverviewMatch && (
+          <>
+          <NavLink to={`/patient/overview/${patientId}`}>
+            <span className="text-lg">👁️</span>
+            <span>Patient Overview</span>
+          </NavLink>
+        
 
-        <NavLink to="/observationList">
+        <NavLink to={`/patient/observations/${patientId}`}>
           <span className="text-lg">📊</span>
           <span>Observation List</span>
         </NavLink>
 
-        <NavLink to="/medicationList">
+        <NavLink to={`/patient/medication-list/${patientId}`}>
           <span className="text-lg">💊</span>
           <span>Medication List</span>
         </NavLink>
 
-        <NavLink to="/encounterHistory">
+        <NavLink to={`/patient/encounter-history/${patientId}`}>
           <span className="text-lg">📅</span>
           <span>Encounter History</span>
         </NavLink>
-
+        </>
+        )}
       </nav>
 
       <div className ="mt-auto pt-8">

@@ -68,7 +68,7 @@ const labelClass =
     const patient_data = await response.json();
     console.log(patient_data);
     if(response.ok) { //check if the response is successful
-      navigate('/searchResults', { state: { patientData: patient_data } }); //navigate to search results page with the fetched data
+      navigate('/search_results', { state: { patientData: patient_data } }); //navigate to search results page with the fetched data
     } else {
       console.error('Error fetching patient data:', patient_data);
     }
