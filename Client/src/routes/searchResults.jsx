@@ -85,7 +85,7 @@ function SearchResults(){
                             return (
                                 <div
                                     key={resource?.id || index}
-                                    className="group rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-blue-300 hover:shadow-md"
+                                    className="cursor-pointer group rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-blue-300 hover:shadow-md"
                                     onClick={()=> navigate(`/patient/overview/${resource?.id}`, {state: {patientResource: resource}})}
                                 >
                                     {/* Card Header */}
