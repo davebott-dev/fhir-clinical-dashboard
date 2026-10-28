@@ -33,6 +33,8 @@ function PatientOverview() {
         </section>
   
  {/* Cholesterol gauge */}
+ {/* make it so chart can change to other observations */}
+ 
       <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="mb-2 text-lg font-semibold text-slate-800">
           Total Cholesterol
