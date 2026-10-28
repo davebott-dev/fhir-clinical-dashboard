@@ -1,45 +1,103 @@
-import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useOutletContext } from 'react-router-dom';
+import {Chart, Title, YAxis} from '@highcharts/react';
+import {GaugeSeries} from '@highcharts/react/series/Gauge';
 
 function PatientOverview() {
   const { patientId } = useParams();
-  const [patient, setPatient] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Fetch patient data from fhir mock server based on patientId
-    const fetchPatientData = async () => {
-      try {
-        const response = await fetch(`https://hapi.fhir.org/baseR4/Patient/${patientId}`);
-        const data = await response.json();
-        setPatient(data);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching patient data:', error);
-        setLoading(false);
-      }
-    };
-    fetchPatientData();
-  }, [patientId]);
+  const [patient, loading, patientObservations] = useOutletContext();
+  
+  const cholesterolObservation = (patientObservations ?? []).filter(observation => observation.resource?.code?.coding?.[0]?.code === '2093-3')[0];
 
   return (
-    <>
-      <div>
+    <main className = "space-y-6">
+      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <h1 className="text-2xl font-bold mb-4">Patient Overview</h1>
-        <p>Displaying information for patient with ID: {patientId}</p>
+        <p className="text-sm text-slate-600">Displaying information for patient with ID: {patientId}</p>
         {loading && <p>Loading...</p>}
         {patient && (
-          <div className="mt-4">
-            <h2 className="text-lg font-semibold mb-2">Patient Details</h2>
-            <p><strong>First Name:</strong> {patient.name?.[0]?.given?.[0]}</p>
-            <p><strong>Last Name:</strong> {patient.name?.[0]?.family}</p>
-            <p><strong>Email:</strong> {patient.telecom?.find(t => t.system === 'email')?.value}</p>
-            <p><strong>Gender:</strong> {patient.gender}</p>
-            <p><strong>Birth Date:</strong> {patient.birthDate}</p>
+          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+            <p className="text-sm text-slate-600">First Name: </p>
+              <p>{patient.name?.[0]?.given?.[0]}</p>
+            <p className="text-sm text-slate-600">Last Name: </p>
+              <p>{patient.name?.[0]?.family}</p>
+            <p className="text-sm text-slate-600">Email: </p>
+              <p>{patient.telecom?.find(t => t.system === 'email')?.value}</p>
+            <p className="text-sm text-slate-600">Gender: </p>
+              <p>{patient.gender}</p>
+            <p className="text-sm text-slate-600">Birth Date: </p>
+              <p>{patient.birthDate}</p>
+          </div>
           </div>
         )}
-      </div>
-    </>
+        </section>
+  
+ {/* Cholesterol gauge */}
+      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="mb-2 text-lg font-semibold text-slate-800">
+          Total Cholesterol
+        </h2>
+
+        {cholesterolObservation == null ? (
+          <p className="py-8 text-center text-sm text-slate-500">
+            No cholesterol result available for this patient.
+          </p>
+        ) : (
+          <>
+            <p className="mb-2 text-center text-3xl font-bold text-slate-800">
+              {cholesterolObservation?.resource?.valueQuantity?.value} mg/dL
+            </p>
+
+            <Chart>
+              <Title text="Total Cholesterol (mg/dL)" />
+
+              <YAxis
+                min={0}
+                max={300}
+                tickInterval={50}
+                plotBands={[
+                  {
+                    from: 0,
+                    to: 200,
+                    color: 'rgba(34, 197, 94, 0.18)',
+                  },
+                  {
+                    from: 200,
+                    to: 300,
+                    color: 'rgba(239, 68, 68, 0.18)',
+                  },
+                ]}
+              />
+
+              <GaugeSeries
+                options={{
+                  name: 'Total Cholesterol',
+                  data: [
+                    {
+                      name: 'Total Cholesterol',
+                      y: Math.min(cholesterolObservation?.resource?.valueQuantity?.value, 300),
+                    },
+                  ],
+                  dataLabels: {
+                    enabled: true,
+                    format: '{y} mg/dL',
+                  },
+                  tooltip: {
+                    pointFormat: '<b>{point.y} mg/dL</b>',
+                  },
+                }}
+              />
+            </Chart>
+            {cholesterolObservation?.resource?.valueQuantity?.value > 300 && (
+              <p className="mt-2 text-sm text-amber-700">
+                The result exceeds the gauge scale. The displayed needle is
+                capped at 300 mg/dL; the actual result is shown above.
+              </p>
+            )}
+          </>
+        )}
+      </section>
+    </main>
   );
 }
 
