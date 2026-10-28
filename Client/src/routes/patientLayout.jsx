@@ -68,7 +68,7 @@ function PatientLayout() {
 
     }
   };
-
+// styled with Tailwind CSS with help of GenAI
   return (
     <main className ="min-h-screen bg-slate-50 px-4 py-6 sm:px-8">
       <section className="mb-8 rounded-xl border border-slate-200 bg-white p-5 shadow-md">
