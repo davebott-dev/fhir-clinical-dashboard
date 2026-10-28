@@ -20,7 +20,7 @@ function App() {
           <Navbar />
         </header>
   )}
-        <div className="p-4 sm:p-6 lg:p-8">
+        <div className="min-h-screen bg-slate-50 px-4 py-6 sm:px-8">
         <Outlet /> { /* Allows rendering of child routes based on the current route */ }
      </div>
       </main>
