@@ -10,94 +10,101 @@ function PatientOverview() {
 
   return (
     <main className = "space-y-6">
-      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 className="text-2xl font-bold mb-4">Patient Overview</h1>
-        <p className="text-sm text-slate-600">Displaying information for patient with ID: {patientId}</p>
-        {loading && <p>Loading...</p>}
-        {patient && (
-          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-            <p className="text-sm text-slate-600">First Name: </p>
-              <p>{patient.name?.[0]?.given?.[0]}</p>
-            <p className="text-sm text-slate-600">Last Name: </p>
-              <p>{patient.name?.[0]?.family}</p>
-            <p className="text-sm text-slate-600">Email: </p>
-              <p>{patient.telecom?.find(t => t.system === 'email')?.value}</p>
-            <p className="text-sm text-slate-600">Gender: </p>
-              <p>{patient.gender}</p>
-            <p className="text-sm text-slate-600">Birth Date: </p>
-              <p>{patient.birthDate}</p>
-          </div>
-          </div>
-        )}
-        </section>
-  
- {/* Cholesterol gauge */}
- {/* make it so chart can change to other observations */}
- 
-      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-2 text-lg font-semibold text-slate-800">
-          Total Cholesterol
-        </h2>
-
-        {cholesterolObservation == null ? (
-          <p className="py-8 text-center text-sm text-slate-500">
-            No cholesterol result available for this patient.
-          </p>
-        ) : (
-          <>
-            <p className="mb-2 text-center text-3xl font-bold text-slate-800">
-              {cholesterolObservation?.resource?.valueQuantity?.value} mg/dL
+      <div className = "grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2">
+        {/* Patient Overview Section */}
+        <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h1 className="text-2xl font-bold mb-4">Patient Overview</h1>
+          <p className="text-sm text-slate-600">Displaying information for patient with ID: {patientId}</p>
+          {loading && <p>Loading...</p>}
+          {patient && (
+            <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
+              <div>
+              <p className="text-sm text-slate-600">First Name: </p>
+                <p>{patient.name?.[0]?.given?.[0]}</p>
+              <p className="text-sm text-slate-600">Last Name: </p>
+                <p>{patient.name?.[0]?.family}</p>
+              <p className="text-sm text-slate-600">Email: </p>
+                <p>{patient.telecom?.find(t => t.system === 'email')?.value}</p>
+              <p className="text-sm text-slate-600">Gender: </p>
+                <p>{patient.gender}</p>
+              <p className="text-sm text-slate-600">Birth Date: </p>
+                <p>{patient.birthDate}</p>
+            </div>
+            </div>
+          )}
+          </section>
+          
+         {/* Cholesterol gauge */}
+         {/* make it so chart can change to other observations */}
+        <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-2 text-lg font-semibold text-slate-800">
+            Total Cholesterol
+          </h2>
+          {cholesterolObservation == null ? (
+            <p className="py-8 text-center text-sm text-slate-500">
+              No cholesterol result available for this patient.
             </p>
-
-            <Chart>
-              <Title text="Total Cholesterol (mg/dL)" />
-
-              <YAxis
-                min={0}
-                max={300}
-                tickInterval={50}
-                plotBands={[
-                  {
-                    from: 0,
-                    to: 200,
-                    color: 'rgba(34, 197, 94, 0.18)',
-                  },
-                  {
-                    from: 200,
-                    to: 300,
-                    color: 'rgba(239, 68, 68, 0.18)',
-                  },
-                ]}
-              />
-
-              <GaugeSeries
-                options={{
-                  name: 'Total Cholesterol',
-                  data: [
-                    {
-                      name: 'Total Cholesterol',
-                      y: Math.min(cholesterolObservation?.resource?.valueQuantity?.value, 300),
-                    },
-                  ],
-                  dataLabels: {
-                    enabled: true,
-                    format: '{y} mg/dL',
-                  },
-                  tooltip: {
-                    pointFormat: '<b>{point.y} mg/dL</b>',
-                  },
-                }}
-              />
-            </Chart>
-            {cholesterolObservation?.resource?.valueQuantity?.value > 300 && (
-              <p className="mt-2 text-sm text-amber-700">
-                The result exceeds the gauge scale. The displayed needle is
-                capped at 300 mg/dL; the actual result is shown above.
+          ) : (
+            <>
+              <p className="mb-2 text-center text-3xl font-bold text-slate-800">
+                {cholesterolObservation?.resource?.valueQuantity?.value} mg/dL
               </p>
-            )}
-          </>
-        )}
+              <Chart>
+                <Title text="Total Cholesterol (mg/dL)" />
+                <YAxis
+                  min={0}
+                  max={300}
+                  tickInterval={50}
+                  plotBands={[
+                    {
+                      from: 0,
+                      to: 200,
+                      color: 'rgba(34, 197, 94, 0.18)',
+                    },
+                    {
+                      from: 200,
+                      to: 300,
+                      color: 'rgba(239, 68, 68, 0.18)',
+                    },
+                  ]}
+                />
+                <GaugeSeries
+                  options={{
+                    name: 'Total Cholesterol',
+                    data: [
+                      {
+                        name: 'Total Cholesterol',
+                        y: Math.min(cholesterolObservation?.resource?.valueQuantity?.value, 300),
+                      },
+                    ],
+                    dataLabels: {
+                      enabled: true,
+                      format: '{y} mg/dL',
+                    },
+                    tooltip: {
+                      pointFormat: '<b>{point.y} mg/dL</b>',
+                    },
+                  }}
+                />
+              </Chart>
+              {cholesterolObservation?.resource?.valueQuantity?.value > 300 && (
+                <p className="mt-2 text-sm text-amber-700">
+                  The result exceeds the gauge scale. The displayed needle is
+                  capped at 300 mg/dL; the actual result is shown above.
+                </p>
+              )}
+            </>
+          )}
+        </section>
+      </div>
+      {/* Additional sections can be added here */}
+      <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="mb-2 text-lg font-semibold text-slate-800">
+          Additional Observations
+        </h2>
+        <p className="py-8 text-center text-sm text-slate-500">
+          No additional observations available for this patient.
+        </p>
       </section>
     </main>
   );
