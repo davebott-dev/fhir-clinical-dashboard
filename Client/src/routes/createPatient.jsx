@@ -1,9 +1,16 @@
 import { useState } from 'react';
+import {useNavigate} from 'react-router-dom';
+import Snackbar from '@mui/material/Snackbar'; 
+import Alert from '@mui/material/Alert';
 
-const labelClass = "block text-sm font-medium text-slate-700";
-const inputClass = "mt-1 block w-full border border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm";
+ const inputClass =
+'mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800 placeholder outline-none transition focus focus focus';
+
+const labelClass =
+'block text-sm font-medium text-slate-700';
 
 function CreatePatient() {
+    const [patientId, setPatientId] = useState(crypto.randomUUID()); // Generate a unique patient ID initially
     const [patientFirst, setPatientFirst] = useState('');
     const [patientLast, setPatientLast] = useState('');
     const [patientEmail, setPatientEmail] = useState('');
@@ -11,6 +18,8 @@ function CreatePatient() {
     const [patientBirthDate, setPatientBirthDate] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [open, setOpen] = useState(false);
+    const navigate = useNavigate(); // Initialize the useNavigate hook for programmatic navigation
 
     const createNewPatient = async(e) => {
         e.preventDefault(); // Prevent default form submission behavior
@@ -28,7 +37,7 @@ function CreatePatient() {
                     active: true,
                     birthDate: patientBirthDate,
                     gender: patientGender,
-                    id: crypto.randomUUID(), // Generates a unique id (crypto is supported in modern browsers)
+                    id: patientId, // Use the generated patient ID
                     resourceType: 'Patient',
                     name: [
                         {
@@ -46,15 +55,26 @@ function CreatePatient() {
                 })
             });
             if(response.ok) {
-                // Handle successful response, e.g., redirect to the patient profile or show a success message
+                setOpen(true); // Show the success Snackbar
+                setTimeout(() => { //delay navigation to allow snackbar to be seen
+                    navigate(`/patient/overview/${patientId}`) // access same patient profile using the generated patient ID
+                }, 3000); // 3-second delay
             } else {
                 throw new Error(`Failed to create patient: ${response.statusText}`);
             }
         } catch (err) {
             setError(err.message);
+            setOpen(true); // Show the error Snackbar
         } finally {
             setLoading(false);
         }
+    };
+    
+    const handleCloseSnackbar = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setOpen(false);
     };
 
     return (
@@ -93,7 +113,7 @@ function CreatePatient() {
       </p>
     </div>
 
-    {/* Search form card */}
+    {/* create form card */}
     <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       <div className="border-b border-slate-200 px-5 py-5 sm:px-8">
         <h2 className="text-lg font-semibold text-slate-900">
@@ -221,24 +241,11 @@ function CreatePatient() {
                     d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
                   />
                 </svg>
-                Searching...
+                Creating...
               </>
             ) : (
               <>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M8.5 3a5.5 5.5 0 103.446 9.787l3.634 3.633 1.414-1.414-3.633-3.634A5.5 5.5 0 008.5 3zM5 8.5a3.5 3.5 0 117 0 3.5 3.5 0 01-7 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                Search Patient
+                + Create Patient
               </>
             )}
           </button>
@@ -246,6 +253,20 @@ function CreatePatient() {
       </form>
     </section>
   </div>
+  <Snackbar
+    open={open}
+    autoHideDuration={6000}
+    onClose={handleCloseSnackbar}
+  >
+    <Alert
+      onClose={handleCloseSnackbar}
+      severity={error ? 'error' : 'success'}
+      variant="filled"
+      sx={{ width: '100%' }}
+    >
+      {error ? error : 'Patient created successfully!'}
+    </Alert>
+  </Snackbar>
 </main>
     );
 }
