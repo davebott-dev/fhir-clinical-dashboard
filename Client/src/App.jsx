@@ -7,7 +7,7 @@ import Navbar from './components/navbar';
 function App() {
 
   const location = useLocation(); // Get the current location object from react-router-dom
-  const hideNavbarRoutes = ['/','/patient_search']; // Define the routes where the Navbar should be hidden
+  const hideNavbarRoutes = ['/','/patient_search', '/create_patient']; // Define the routes where the Navbar should be hidden
 
   const showNavbar = !hideNavbarRoutes.includes(location.pathname) // Determine whether to show the Navbar based on the current route
 

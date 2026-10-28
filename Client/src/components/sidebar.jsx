@@ -27,6 +27,10 @@ function Sidebar() {
           <span className="text-lg">🔎</span>
           <span>Patient Search</span>
         </NavLink>
+        <NavLink to="/create_patient">
+          <span className="text-lg">➕</span>
+          <span>Create Patient</span>
+        </NavLink>
         
         {patientOverviewMatch && (
           <>

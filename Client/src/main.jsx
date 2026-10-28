@@ -9,6 +9,8 @@ import MedicationList from './routes/medicationList.jsx';
 import EncounterHistory from './routes/encounterHistory.jsx';
 import SearchResults from './routes/searchResults.jsx';
 import PatientLayout from './routes/patientLayout.jsx';
+import CreatePatient from './routes/createPatient.jsx';
+
 import Index from './routes/index.jsx';
 import './index.css';
 
@@ -24,6 +26,10 @@ const router = createBrowserRouter([
       {
         path: 'patient_search',
         element: <PatientSearch />
+      },
+      {
+        path: 'create_patient',
+        element: <CreatePatient />
       },
         {
         path: 'search_results',
