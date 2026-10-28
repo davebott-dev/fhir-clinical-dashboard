@@ -1,6 +1,75 @@
-function Navbar() {
-    // tailwind css and svg tags created with help of generative AI
+import { useState } from 'react';
+import {useNavigate} from 'react-router-dom';
 
+function Navbar() {
+    const [searchTerm, setSearchTerm] = useState('');
+    const navigate = useNavigate();
+
+    // const handleSearch = async () => {
+    //     try{
+    //         const response = await fetch(`https://hapi.fhir.org/baseR4/Patient/_search?name=${searchTerm}`,
+    //             {
+    //                 method: 'GET',
+    //                 headers: {
+    //                     'Content-Type': 'application/fhir+json'
+    //                 }
+    //             }
+    //         );
+    //         const patientData = await response.json();
+    //         if(response.ok) {
+    //             console.log(patientData);
+    //             navigate('/search_results', { state: patientData });
+    //         } else {
+    //             const response = await fetch(`https://hapi.fhir.org/baseR4/Patient/_search?_id=${searchTerm}`,
+    //                 {
+    //                     method: 'GET',
+    //                     headers: {
+    //                         'Content-Type': 'application/fhir+json'
+    //                     }
+    //                 }
+    //             );
+    //             const patientData = await response.json();
+    //             if(response.ok) {
+    //                 console.log(patientData);
+    //                 navigate('/search_results', { state: patientData });
+    //             } else {
+    //                 const response = await fetch(`https://hapi.fhir.org/baseR4/Patient/_search?email=${searchTerm}`,
+    //                     {
+    //                         method: 'GET',
+    //                         headers: {
+    //                             'Content-Type': 'application/fhir+json'
+    //                         }
+    //                     }
+    //                 );
+    //                 const patientData = await response.json();
+    //                 if(response.ok) {
+    //                     console.log(patientData);
+    //                     navigate('/search_results', { state: patientData });
+    //                 } else {
+    //                     const response = await fetch(`https://hapi.fhir.org/baseR4/Patient/_search?family=${searchTerm}`,
+    //                         {
+    //                             method: 'GET',
+    //                             headers: {
+    //                                 'Content-Type': 'application/fhir+json'
+    //                             }
+    //                         }
+    //                     );
+    //                     const patientData = await response.json();
+    //                     if(response.ok) {
+    //                         console.log(patientData);
+    //                         navigate('/search_results', { state: patientData });
+    //                     } else {
+    //                         console.error('Search failed with status:', response.status);
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     } catch (error) {
+    //         console.error('Error searching patients:', error);
+        // }
+    // }
+
+    // tailwind css and svg tags created with help of generative AI
     return (
         <header className="sticky top-0 z-20 w-full border-b border-slate-200 bg-white shadow-sm">
             <div className="flex h-20 items-center justify-between gap-4 px-4 sm:px-8">
@@ -11,10 +80,15 @@ function Navbar() {
                         type="text"
                         placeholder="Search patients by name, ID, or email..."
                         className="min-w-0 flex-1 border-none bg-transparent text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-0"
+                        value={searchTerm}
+                        onChange={(e) => {
+                            setSearchTerm(e.target.value);
+                        }}
                     />
                     <button
                         type="button"
                         className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        // onClick={handleSearch}
                     >
                         Search
                     </button>
