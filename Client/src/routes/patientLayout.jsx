@@ -71,13 +71,47 @@ function PatientLayout() {
 
   return (
     <main className ="min-h-screen bg-slate-50 px-4 py-6 sm:px-8">
-      <div className="mb-8 flex flex-row items-center gap-4">
-      <Avatar/>     
-      {patientId && <p>{getPatientName()}</p>}
-      <span>Data refreshed at: {timestamp}</span>
+      <section className="mb-8 rounded-xl border border-slate-200 bg-white p-5 shadow-md">
+      <div className = "flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+      
+      <div className ="flex min-w-0 items-center gap-4">
+      <Avatar
+       sx={{
+            width: 56,
+            height: 56,
+            bgcolor: '#dbeafe',
+            color: '#1d4ed8',
+            fontSize: '1.25rem',
+            fontWeight: 600,
+          }}
+      >
+        {getPatientName().split(' ').map(name => name.toUpperCase()[0]).join('')|| 'P'}
+      </Avatar>
+
+          <div className= "min-w-0">
+      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500"> Patient Profile</p>
+      <h1 className = "mt-1 truncate text-xl font-semibold tracking-tight text-slate-800 sm:text-2xl">{patientId? getPatientName() : 'Patient Details'}</h1>
+
+      {patientId &&  (
+        <p className = "mt-1 text-sm text-slate-500"> Patient ID: {patientId}</p>
+      )}
+      </div>
+      </div>
+
+      <div className = "flex items-center justify-between gap-3 sm:justify-end">
+        <div className = "flex items-center gap-3 rounded-lg bg-slate-50 px-3 py-2">
+          <div className = "flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-500">
+            <RefreshIcon fontSize="small" />
+          </div>
+      <div>
+        <p className="text-xs font-medium text-slate-500">Data refreshed </p>
+      <p className = "text-sm font-semibold tabular-nums text-slate-700">{timestamp}</p>
+      
+      </div>
       <IconButton aria-label="refresh" onClick={() => setTimestamp(new Date().toLocaleTimeString())}>
         <RefreshIcon />
       </IconButton>
+        </div>
       {/* Menu set up with help from Material UI Docs */}
       <IconButton aria-label="more" onClick={(event) => setAnchorEl(event.currentTarget)}>
         <MoreHorizIcon />
@@ -91,6 +125,8 @@ function PatientLayout() {
         <MenuItem onClick={() => { setAnchorEl(null); handleDeletePatient(); }}>Delete Patient</MenuItem>
       </Menu>
       </div>
+      </div>
+      </section>
       <Outlet context={ [patient ,loading, patientObservations] } />
       <Snackbar
         open={open}
