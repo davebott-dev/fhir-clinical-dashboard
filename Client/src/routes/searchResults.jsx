@@ -19,8 +19,8 @@ function SearchResults(){
         setPage(value); // Update the current page state when the pagination control is used
     }
   
-    // use of optional chaining (?.) seen below is important to avoid errors in accessing and rendering patient data
-    // tailwindcss generated with help of generative AI, and then modified to fit the design of the application.
+    // Use of optional chaining (?.) seen below is important to avoid errors in accessing and rendering patient data
+    // Tailwind CSS generated with help of generative AI, and then modified to fit the design of the application.
   return (
         <div className="min-h-screen bg-slate-50 px-4 py-10 sm:px-8">
             <div className="mx-auto max-w-5xl">
