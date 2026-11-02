@@ -12,8 +12,8 @@ function Navbar() {
         if(searchTermArray.length>1) {
             try{
                 const response = await fetch(`https://hapi.fhir.org/baseR4/Patient/_search?given=${searchTermArray[0]}&family=${searchTermArray[1]}`);
-                const data = await response.json();
-                console.log('Search results:', data);
+                const patient_data = await response.json();
+                navigate('/search_results', { state: { patientData: patient_data } }); //navigate to search results page with the fetched data
             }catch(error){
                 console.error('Error during search:', error);
             }
@@ -22,7 +22,7 @@ function Navbar() {
                 try{
                     const response = await fetch(`https://hapi.fhir.org/baseR4/Patient/_search?email=${searchTermArray[0]}`);
                     const data = await response.json();
-                    console.log('Search results:', data);
+                    navigate('/search_results', { state: { patientData: data } }); //navigate to search results page with the fetched data
                 }catch(error){
                     console.error('Error during search:', error);
                 }
@@ -31,7 +31,7 @@ function Navbar() {
                 try{
                     const response = await fetch(`https://hapi.fhir.org/baseR4/Patient/_search?_id=${searchTermArray[0]}`);
                     const data = await response.json();
-                    console.log('Search results:', data);
+                    navigate('/search_results', { state: { patientData: data } }); //navigate to search results page with the fetched data
                 }catch(error){
                     console.error('Error during search:', error);
                 }
@@ -40,7 +40,7 @@ function Navbar() {
                 try{
                     const response = await fetch(`https://hapi.fhir.org/baseR4/Patient/_search?name=${searchTermArray[0]}`);
                     const data = await response.json();
-                    console.log('Search results:', data);
+                    navigate('/search_results', { state: { patientData: data } }); //navigate to search results page with the fetched data
                 }catch(error){
                     console.error('Error during search:', error);
                 }
