@@ -8,6 +8,7 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Snackbar from '@mui/material/Snackbar'; 
 import Alert from '@mui/material/Alert';
+import AddCommentIcon from '@mui/icons-material/AddComment';
 
 
 function PatientLayout() {
@@ -137,6 +138,27 @@ function PatientLayout() {
           Patient deleted successfully
         </Alert>
       </Snackbar>
+        {/* Patient Notes Button Specifications generated with help of GenAI */}
+        <IconButton
+          aria-label="Patient Notes"
+          onClick={() => console.log('Open patient notes')}
+          sx={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            zIndex: 1300,
+            width: 56,
+            height: 56,
+            backgroundColor: '#2563eb',
+            color: '#ffffff',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+            '&:hover': {
+              backgroundColor: '#1d4ed8',
+            },
+          }}
+        >
+  <AddCommentIcon />
+</IconButton>
     </main>
   );
 }

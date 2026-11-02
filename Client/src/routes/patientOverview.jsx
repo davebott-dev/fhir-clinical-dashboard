@@ -97,13 +97,22 @@ function PatientOverview() {
           )}
         </section>
       </div>
-      {/* Additional sections can be added here */}
+      {/* Additional section*/}
       <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="mb-2 text-lg font-semibold text-slate-800">
           Additional Observations
         </h2>
         <p className="py-8 text-center text-sm text-slate-500">
           No additional observations available for this patient.
+        </p>
+      </section>
+      {/*Patient Notes*/}
+      <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="mb-2 text-lg font-semibold text-slate-800">
+          Patient Notes
+        </h2>
+        <p className="py-8 text-center text-sm text-slate-500">
+          No patient notes available for this patient.
         </p>
       </section>
     </main>
