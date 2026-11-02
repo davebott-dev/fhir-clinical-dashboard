@@ -5,69 +5,49 @@ function Navbar() {
     const [searchTerm, setSearchTerm] = useState('');
     const navigate = useNavigate();
 
-    // const handleSearch = async () => {
-    //     try{
-    //         const response = await fetch(`https://hapi.fhir.org/baseR4/Patient/_search?name=${searchTerm}`,
-    //             {
-    //                 method: 'GET',
-    //                 headers: {
-    //                     'Content-Type': 'application/fhir+json'
-    //                 }
-    //             }
-    //         );
-    //         const patientData = await response.json();
-    //         if(response.ok) {
-    //             console.log(patientData);
-    //             navigate('/search_results', { state: patientData });
-    //         } else {
-    //             const response = await fetch(`https://hapi.fhir.org/baseR4/Patient/_search?_id=${searchTerm}`,
-    //                 {
-    //                     method: 'GET',
-    //                     headers: {
-    //                         'Content-Type': 'application/fhir+json'
-    //                     }
-    //                 }
-    //             );
-    //             const patientData = await response.json();
-    //             if(response.ok) {
-    //                 console.log(patientData);
-    //                 navigate('/search_results', { state: patientData });
-    //             } else {
-    //                 const response = await fetch(`https://hapi.fhir.org/baseR4/Patient/_search?email=${searchTerm}`,
-    //                     {
-    //                         method: 'GET',
-    //                         headers: {
-    //                             'Content-Type': 'application/fhir+json'
-    //                         }
-    //                     }
-    //                 );
-    //                 const patientData = await response.json();
-    //                 if(response.ok) {
-    //                     console.log(patientData);
-    //                     navigate('/search_results', { state: patientData });
-    //                 } else {
-    //                     const response = await fetch(`https://hapi.fhir.org/baseR4/Patient/_search?family=${searchTerm}`,
-    //                         {
-    //                             method: 'GET',
-    //                             headers: {
-    //                                 'Content-Type': 'application/fhir+json'
-    //                             }
-    //                         }
-    //                     );
-    //                     const patientData = await response.json();
-    //                     if(response.ok) {
-    //                         console.log(patientData);
-    //                         navigate('/search_results', { state: patientData });
-    //                     } else {
-    //                         console.error('Search failed with status:', response.status);
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     } catch (error) {
-    //         console.error('Error searching patients:', error);
-        // }
-    // }
+    const handleSearch = async() => {
+        let searchTermArray = searchTerm.split(' ');
+
+        if(searchTermArray.length === 0) return;
+        if(searchTermArray.length>1) {
+            try{
+                const response = await fetch(`https://hapi.fhir.org/baseR4/Patient/_search?given=${searchTermArray[0]}&family=${searchTermArray[1]}`);
+                const data = await response.json();
+                console.log('Search results:', data);
+            }catch(error){
+                console.error('Error during search:', error);
+            }
+        } else {
+            if(searchTermArray[0].includes("@")){
+                try{
+                    const response = await fetch(`https://hapi.fhir.org/baseR4/Patient/_search?email=${searchTermArray[0]}`);
+                    const data = await response.json();
+                    console.log('Search results:', data);
+                }catch(error){
+                    console.error('Error during search:', error);
+                }
+            }
+            if(!isNaN(Number(searchTermArray[0]))){
+                try{
+                    const response = await fetch(`https://hapi.fhir.org/baseR4/Patient/_search?_id=${searchTermArray[0]}`);
+                    const data = await response.json();
+                    console.log('Search results:', data);
+                }catch(error){
+                    console.error('Error during search:', error);
+                }
+            }
+            if(!searchTermArray[0].includes("@") && isNaN(Number(searchTermArray[0]))){
+                try{
+                    const response = await fetch(`https://hapi.fhir.org/baseR4/Patient/_search?name=${searchTermArray[0]}`);
+                    const data = await response.json();
+                    console.log('Search results:', data);
+                }catch(error){
+                    console.error('Error during search:', error);
+                }
+            }
+        }
+        console.log('Searching for:', searchTermArray);
+    };
 
     // tailwind css and svg tags created with help of generative AI
     return (
@@ -88,7 +68,7 @@ function Navbar() {
                     <button
                         type="button"
                         className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                        // onClick={handleSearch}
+                        onClick={handleSearch}
                     >
                         Search
                     </button>
