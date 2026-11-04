@@ -10,6 +10,7 @@ import EncounterHistory from './routes/encounterHistory.jsx';
 import SearchResults from './routes/searchResults.jsx';
 import PatientLayout from './routes/patientLayout.jsx';
 import CreatePatient from './routes/createPatient.jsx';
+import PatientFiles from './routes/patientFiles.jsx';
 
 import Index from './routes/index.jsx';
 import './index.css';
@@ -54,6 +55,10 @@ const router = createBrowserRouter([
       {
         path: 'encounter-history/:patientId',
         element: <EncounterHistory />
+      },
+      {
+        path: 'files/:patientId',
+        element: <PatientFiles />
       }
         ]
       }

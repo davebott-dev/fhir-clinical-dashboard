@@ -54,6 +54,11 @@ function Sidebar() {
           <span className="text-lg">📅</span>
           <span>Encounter History</span>
         </NavLink>
+
+        <NavLink to={`/patient/files/${patientId}`}>
+          <span className="text-lg">📁</span>
+          <span>Patient Files</span>
+        </NavLink>
         </>
         )}
       </nav>

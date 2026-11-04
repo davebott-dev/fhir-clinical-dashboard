@@ -1,54 +1,180 @@
 import { useParams, useOutletContext } from 'react-router-dom';
-import {Chart, Title, YAxis} from '@highcharts/react';
-import {GaugeSeries} from '@highcharts/react/series/Gauge';
+import { Chart, Title, YAxis } from '@highcharts/react';
+import { GaugeSeries } from '@highcharts/react/series/Gauge';
+import AddIcon from '@mui/icons-material/Add';
+import IconButton from '@mui/material/IconButton';
 
 function PatientOverview() {
   const { patientId } = useParams();
   const [patient, loading, patientObservations] = useOutletContext();
-  
-  const cholesterolObservation = (patientObservations ?? []).filter(observation => observation.resource?.code?.coding?.[0]?.code === '2093-3')[0];
+
+  // storing data in varaibles for easier access 
+
+  const cholesterolObservation = (patientObservations ?? []).find(
+    observation =>
+      observation.resource?.code?.coding?.some(
+        coding => coding.code === '2093-3'
+      )
+  );
+
+  const cholesterol =
+    cholesterolObservation?.resource?.valueQuantity?.value;
+
+  const address = patient?.address?.[0];
+
+  const formattedAddress = address
+    ? [
+        address.line?.join(', '),
+        address.city,
+        address.state,
+        address.postalCode,
+        address.country,
+      ].filter(Boolean).join(', ')
+    : 'Not available';
+
+  const phone = patient?.telecom?.find(
+    t => t.system === 'phone'
+  )?.value;
+
+  const email = patient?.telecom?.find(
+    t => t.system === 'email'
+  )?.value;
+
+  const language =
+    patient?.communication?.find(
+      c => c.preferred
+    )?.language?.text ??
+    patient?.communication?.[0]?.language?.coding?.[0]?.display;
+
+  const ethnicity =
+    patient?.extension?.find(extension =>
+      extension.url?.toLowerCase().includes('us-core-ethnicity')
+    )?.extension?.find(item => item.url === 'text')?.valueString;
+
+  const firstName = patient?.name?.[0]?.given?.[0];
+  const lastName = patient?.name?.[0]?.family;
+
+
+  // created react components for card and detail to make the code more readable and reusable
+
+  const Card = ({ title, subtitle, children, className = '' }) => (
+    <section className={`rounded-2xl border border-slate-200 bg-white shadow-sm ${className}`}>
+      <div className="border-b border-slate-100 px-6 py-4">
+        <h2 className="text-base font-semibold text-slate-800">
+          {title}
+        </h2>
+        {subtitle && (
+          <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
+        )}
+      </div>
+      <div className="p-6">{children}</div>
+    </section>
+  );
+
+  const Detail = ({ label, value }) => (
+    <div className="min-w-0">
+      <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
+        {label}
+      </dt>
+      <dd className="mt-1 break-words text-sm font-medium text-slate-800">
+        {value || 'Not available'}
+      </dd>
+    </div>
+  );
+
+  if (loading) {
+    return (
+      <div className="flex min-h-64 items-center justify-center">
+        <p className="text-sm font-medium text-slate-500">
+          Loading patient information...
+        </p>
+      </div>
+    );
+  }
+
+  if (!patient) {
+    return (
+      <div className="rounded-xl border border-slate-200 bg-white p-8 text-center">
+        <h2 className="font-semibold text-slate-800">
+          Patient not found
+        </h2>
+        <p className="mt-2 text-sm text-slate-500">
+          Unable to retrieve patient information.
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <main className = "space-y-6">
-      <div className = "grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2">
-        {/* Patient Overview Section */}
-        <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h1 className="text-2xl font-bold mb-4">Patient Overview</h1>
-          <p className="text-sm text-slate-600">Displaying information for patient with ID: {patientId}</p>
-          {loading && <p>Loading...</p>}
-          {patient && (
-            <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
-              <div>
-              <p className="text-sm text-slate-600">First Name: </p>
-                <p>{patient.name?.[0]?.given?.[0]}</p>
-              <p className="text-sm text-slate-600">Last Name: </p>
-                <p>{patient.name?.[0]?.family}</p>
-              <p className="text-sm text-slate-600">Email: </p>
-                <p>{patient.telecom?.find(t => t.system === 'email')?.value}</p>
-              <p className="text-sm text-slate-600">Gender: </p>
-                <p>{patient.gender}</p>
-              <p className="text-sm text-slate-600">Birth Date: </p>
-                <p>{patient.birthDate}</p>
-            </div>
-            </div>
-          )}
-          </section>
-          
-         {/* Cholesterol gauge */}
-         {/* make it so chart can change to other observations */}
-        <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-2 text-lg font-semibold text-slate-800">
-            Total Cholesterol
-          </h2>
-          {cholesterolObservation == null ? (
-            <p className="py-8 text-center text-sm text-slate-500">
-              No cholesterol result available for this patient.
-            </p>
-          ) : (
-            <>
-              <p className="mb-2 text-center text-3xl font-bold text-slate-800">
-                {cholesterolObservation?.resource?.valueQuantity?.value} mg/dL
+    <main className="space-y-6">
+
+      {/* Snapshot and Demographics */}
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+
+        <Card
+          title="Patient Snapshot"
+          subtitle="Patient contact and identifying information"
+        >
+          <dl className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
+            <Detail label="First Name" value={firstName} />
+            <Detail label="Last Name" value={lastName} />
+            <Detail label="Email" value={email} />
+            <Detail label="Phone Number" value={phone} />
+            <Detail label="Legal Sex / Gender" value={patient.gender} />
+            <Detail label="Birth Date" value={patient.birthDate} />
+          </dl>
+        </Card>
+
+        <Card
+          title="Patient Demographics"
+          subtitle="Address and demographic information"
+        >
+          <dl className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
+            <Detail label="Address" value={formattedAddress} />
+            <Detail label="Phone Number" value={phone} />
+            <Detail label="Ethnicity" value={ethnicity} />
+            <Detail label="Email" value={email} />
+            <Detail label="Preferred Language" value={language} />
+          </dl>
+        </Card>
+      </div>
+
+      {/* Laboratory Results */}
+      <Card
+        title="Laboratory Results"
+        subtitle="Available patient laboratory observations"
+      >
+        {cholesterol == null ? (
+          <p className="py-8 text-center text-sm text-slate-500">
+            No cholesterol result available.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-2">
+
+            <div>
+              <p className="text-sm font-medium text-slate-500">
+                Total Cholesterol
               </p>
+
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="text-5xl font-bold tracking-tight text-slate-900">
+                  {cholesterol}
+                </span>
+                <span className="text-sm text-slate-500">mg/dL</span>
+              </div>
+
+              <p className="mt-3 text-xs text-slate-500">
+                Reference threshold shown: 200 mg/dL
+              </p>
+
+              <div className="mt-4 inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+                {cholesterol < 200
+                  ? 'Below 200 mg/dL'
+                  : 'At or above 200 mg/dL'}
+              </div>
+            </div>
+
+            <div className="min-w-0">
               <Chart>
                 <Title text="Total Cholesterol (mg/dL)" />
                 <YAxis
@@ -59,12 +185,12 @@ function PatientOverview() {
                     {
                       from: 0,
                       to: 200,
-                      color: 'rgba(34, 197, 94, 0.18)',
+                      color: 'rgba(34, 197, 94, 0.15)',
                     },
                     {
                       from: 200,
                       to: 300,
-                      color: 'rgba(239, 68, 68, 0.18)',
+                      color: 'rgba(239, 68, 68, 0.15)',
                     },
                   ]}
                 />
@@ -74,7 +200,7 @@ function PatientOverview() {
                     data: [
                       {
                         name: 'Total Cholesterol',
-                        y: Math.min(cholesterolObservation?.resource?.valueQuantity?.value, 300),
+                        y: Math.min(cholesterol, 300),
                       },
                     ],
                     dataLabels: {
@@ -87,34 +213,93 @@ function PatientOverview() {
                   }}
                 />
               </Chart>
-              {cholesterolObservation?.resource?.valueQuantity?.value > 300 && (
-                <p className="mt-2 text-sm text-amber-700">
-                  The result exceeds the gauge scale. The displayed needle is
-                  capped at 300 mg/dL; the actual result is shown above.
-                </p>
-              )}
-            </>
-          )}
-        </section>
-      </div>
-      {/* Additional section*/}
-      <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-2 text-lg font-semibold text-slate-800">
-          Additional Observations
-        </h2>
-        <p className="py-8 text-center text-sm text-slate-500">
-          No additional observations available for this patient.
-        </p>
-      </section>
-      {/*Patient Notes*/}
-      <section className="min-w-0 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-2 text-lg font-semibold text-slate-800">
-          Patient Notes
-        </h2>
-        <p className="py-8 text-center text-sm text-slate-500">
-          No patient notes available for this patient.
-        </p>
-      </section>
+            </div>
+          </div>
+        )}
+
+        {cholesterol > 300 && (
+          <p className="mt-3 text-sm text-amber-700">
+            Actual result exceeds the gauge scale of 300 mg/dL.
+          </p>
+        )}
+      </Card>
+
+      {/* Additional Observations */}
+      <Card
+        title="Additional Observations"
+        subtitle="Other recorded patient measurements and laboratory results"
+      >
+        {(patientObservations ?? []).filter(
+          observation =>
+            observation.resource?.code?.coding?.[0]?.code !== '2093-3'
+        ).length === 0 ? (
+          <div className="py-8 text-center">
+            <p className="text-sm font-medium text-slate-600">
+              No additional observations available.
+            </p>
+            <p className="mt-1 text-xs text-slate-400">
+              Additional clinical measurements will appear here.
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-slate-200 text-xs uppercase text-slate-500">
+                <tr>
+                  <th className="px-4 py-3">Observation</th>
+                  <th className="px-4 py-3">Value</th>
+                  <th className="px-4 py-3">Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {(patientObservations ?? [])
+                  .filter(
+                    observation =>
+                      observation.resource?.code?.coding?.[0]?.code !== '2093-3'
+                  )
+                  .map(observation => {
+                    const resource = observation.resource;
+                    return (
+                      <tr key={resource.id}>
+                        <td className="px-4 py-3 font-medium text-slate-800">
+                          {resource.code?.text ||
+                            resource.code?.coding?.[0]?.display ||
+                            'Observation'}
+                        </td>
+                        <td className="px-4 py-3 text-slate-600">
+                          {resource.valueQuantity
+                            ? `${resource.valueQuantity.value} ${resource.valueQuantity.unit || ''}`
+                            : resource.valueString || 'N/A'}
+                        </td>
+                        <td className="px-4 py-3 text-slate-600">
+                          {resource.effectiveDateTime
+                            ? new Date(resource.effectiveDateTime).toLocaleDateString()
+                            : 'N/A'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
+
+      {/* Patient Notes */}
+      <Card
+        title="Patient Notes"
+        subtitle="Clinical documentation associated with this patient"
+      >
+        <div className="py-8 text-center">
+          <p className="text-sm font-medium text-slate-600">
+            No patient notes available.
+          </p>
+          <p className="mt-1 text-xs text-slate-400">
+            Patient documentation will appear here when available.
+          </p>
+        </div>
+      </Card>
+
     </main>
   );
 }

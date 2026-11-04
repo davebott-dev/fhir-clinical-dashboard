@@ -71,11 +71,13 @@ function PatientLayout() {
   };
 // styled with Tailwind CSS with help of GenAI
   return (
-    <main className ="min-h-screen bg-slate-50 px-4 py-6 sm:px-8">
-      <section className="mb-8 rounded-xl border border-slate-200 bg-white p-5 shadow-md">
-      <div className = "flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-      
-      <div className ="flex min-w-0 items-center gap-4">
+    <main className ="min-h-screen bg-slate-50 px-4 pt-6 pb-28" >
+    {/* Patient Header */}
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="h-2 bg-blue-600" />
+
+        <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center">
+              <div className ="flex min-w-0 items-center gap-4">
       <Avatar
        sx={{
             width: 56,
@@ -89,17 +91,23 @@ function PatientLayout() {
         {getPatientName().split(' ').map(name => name.toUpperCase()[0]).join('')|| 'P'}
       </Avatar>
 
-          <div className= "min-w-0">
-      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500"> Patient Profile</p>
-      <h1 className = "mt-1 truncate text-xl font-semibold tracking-tight text-slate-800 sm:text-2xl">{patientId? getPatientName() : 'Patient Details'}</h1>
 
-      {patientId &&  (
-        <p className = "mt-1 text-sm text-slate-500"> Patient ID: {patientId}</p>
-      )}
-      </div>
       </div>
 
-      <div className = "flex items-center justify-between gap-3 sm:justify-end">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
+              Patient Overview
+            </p>
+
+            <h1 className="mt-1 text-2xl font-bold text-slate-900">
+            {getPatientName()}
+            </h1>
+
+            <p className="mt-1 text-sm text-slate-500">
+              Patient ID: {patientId}
+            </p>
+          </div>
+    <div className = "flex items-center justify-between gap-3 sm:justify-end">
         <div className = "flex items-center gap-3 rounded-lg bg-slate-50 px-3 py-2">
           <div className = "flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-500">
             <RefreshIcon fontSize="small" />
@@ -126,9 +134,13 @@ function PatientLayout() {
         <MenuItem onClick={() => { setAnchorEl(null); handleDeletePatient(); }}>Delete Patient</MenuItem>
       </Menu>
       </div>
-      </div>
+
+        </div>
+        
       </section>
+      <div className="mt-6">
       <Outlet context={ [patient ,loading, patientObservations] } />
+      </div>
       <Snackbar
         open={open}
         autoHideDuration={6000}
