@@ -9,6 +9,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Snackbar from '@mui/material/Snackbar'; 
 import Alert from '@mui/material/Alert';
 import AddCommentIcon from '@mui/icons-material/AddComment';
+import NotesModal from '../components/notesModal.jsx';
 
 
 function PatientLayout() {
@@ -20,6 +21,9 @@ function PatientLayout() {
   const [patientObservations, setPatientObservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+  const handleOpenModal = () => setOpenModal(true);
+  const handleCloseModal = () => setOpenModal(false);
 
     useEffect(() => {
     // Fetch patient data from fhir mock server based on patientId
@@ -153,7 +157,7 @@ function PatientLayout() {
         {/* Patient Notes Button Specifications generated with help of GenAI */}
         <IconButton
           aria-label="Patient Notes"
-          onClick={() => console.log('Open patient notes')}
+          onClick={() => {handleOpenModal()}}
           sx={{
             position: 'fixed',
             bottom: 24,
@@ -171,6 +175,7 @@ function PatientLayout() {
         >
   <AddCommentIcon />
 </IconButton>
+          <NotesModal open={openModal} handleClose={handleCloseModal} patientId={patientId} />
     </main>
   );
 }

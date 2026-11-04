@@ -1,12 +1,17 @@
+import { useState } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
 import { Chart, Title, YAxis } from '@highcharts/react';
 import { GaugeSeries } from '@highcharts/react/series/Gauge';
 import AddIcon from '@mui/icons-material/Add';
 import IconButton from '@mui/material/IconButton';
+import NotesModal from '../components/notesModal.jsx';
 
 function PatientOverview() {
   const { patientId } = useParams();
   const [patient, loading, patientObservations] = useOutletContext();
+  const [open, setOpen] = useState(false);
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
 
   // storing data in varaibles for easier access 
 
@@ -57,12 +62,24 @@ function PatientOverview() {
 
   // created react components for card and detail to make the code more readable and reusable
 
-  const Card = ({ title, subtitle, children, className = '' }) => (
+  const Card = ({ title, subtitle, children, className = '', button}) => (
     <section className={`rounded-2xl border border-slate-200 bg-white shadow-sm ${className}`}>
       <div className="border-b border-slate-100 px-6 py-4">
-        <h2 className="text-base font-semibold text-slate-800">
-          {title}
-        </h2>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-base font-semibold text-slate-800">
+            {title}
+          </h2>
+          {button && (
+            <div className="mt-2">
+              <IconButton
+                aria-label="add"
+                onClick={handleOpen}
+              >
+                <AddIcon />
+              </IconButton>
+            </div>
+          )}
+        </div>
         {subtitle && (
           <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
         )}
@@ -105,9 +122,10 @@ function PatientOverview() {
     );
   }
 
+
+
   return (
     <main className="space-y-6">
-
       {/* Snapshot and Demographics */}
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
 
@@ -289,7 +307,12 @@ function PatientOverview() {
       <Card
         title="Patient Notes"
         subtitle="Clinical documentation associated with this patient"
-      >
+        button={
+          <IconButton>
+            <AddIcon />
+          </IconButton>
+        }
+     > 
         <div className="py-8 text-center">
           <p className="text-sm font-medium text-slate-600">
             No patient notes available.
@@ -299,8 +322,10 @@ function PatientOverview() {
           </p>
         </div>
       </Card>
+      <NotesModal open={open} handleClose={handleClose} patientId={patientId} />
 
     </main>
+    
   );
 }
 
