@@ -7,7 +7,7 @@ function Sidebar() {
 
 
   return (
-    <aside className = "flex min-h-screen w-full shrink-0 flex-col bg-slate-950 p-5 text-white md:w-64">
+    <aside className="flex h-screen w-full shrink-0 flex-col overflow-hidden bg-slate-950 p-5 text-white md:w-64">
       <div className="mb-5 flex items-center gap-3 px-2 pt-2">
         <div className = "flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-600 text-xl font-bold shadow-lg shadow-indigo 950/30">
           F
@@ -20,7 +20,7 @@ function Sidebar() {
       <p className = "mb-3 px-3 text-xs font-semibold uppercase tracking-widest text-slate-500">
         Workspace
       </p>
-      <nav className="flex flex-col gap-0.5">
+      <nav className="flex flex-col gap-0.3 overflow-y-auto">
         <NavLink to="/" 
             className={({ isActive }) => //built in navlink isActive prop determines if the link is active
   `flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors ${
@@ -129,7 +129,7 @@ function Sidebar() {
         )}
       </nav>
 
-      <div className ="mt-auto pt-8">
+      <div className="mt-auto shrink-0 pt-4">
         <div className = "rounded-xl border border-white/10 bg-white/5 p-4">
         <p className = "text-sm font-medium text-white">Development Environment</p>
         <p className = "mt-1 text-xs leading-5 text-slate-400">Connected to FHIR Server</p>
