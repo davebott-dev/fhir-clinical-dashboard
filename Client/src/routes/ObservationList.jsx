@@ -1,5 +1,5 @@
-import {useState} from 'react';
-import {useParams, useOutletContext} from 'react-router-dom';
+import {useState, useEffect} from 'react';
+import {useOutletContext} from 'react-router-dom';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -10,12 +10,30 @@ import TablePagination from '@mui/material/TablePagination';
 import Paper from '@mui/material/Paper';
 
 function ObservationList() {
-  const [patient, loading, patientObservations] = useOutletContext();
-  const observations = patientObservations??[];
+  const [patient] = useOutletContext();
+  const [patientObservations, setPatientObservations] = useState([]);
+  const [loading,setLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  console.log(observations);
+
+   useEffect(() => {
+    setLoading(true);
+    try{
+      const fetchData = async () => {
+        const response = await fetch(`https://hapi.fhir.org/baseR4/Observation?patient=${patient?.id}`);
+        const data = await response.json();
+        setPatientObservations(data.entry ?? []);
+      };
+      fetchData();
+    }catch(error){
+      console.error('Error fetching patient observations:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [patient?.id]);
+
+
 
   const getDate = (observation)=> {
     const date = observation?.effectiveDateTime || observation?.effectivePeriod?.start || observation?.issued;
@@ -31,10 +49,13 @@ function ObservationList() {
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
-  };
+  };``
 
+ 
   return (
     <main className = "space-y-6 p-6">
+      {loading ? <p>Loading...</p> : (
+        <>
       {/* Observation Header Section */}
       <section>
       <h1 className = "text-2xl font-bold text-slate-800">Observations</h1>
@@ -47,7 +68,7 @@ function ObservationList() {
           Total Results:
         </p>
         <h2 className = "mt-2 text-3xl font-bold text-slate-800">
-        {observations?.length}
+        {patientObservations?.length}
         </h2>
         </div>
         <div className = "rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -55,7 +76,7 @@ function ObservationList() {
           Last Updated:
         </p>
         <h2 className = "mt-2 text-3xl font-bold text-slate-800">
-        {observations?.length > 0 ? getDate(observations[observations.length - 1]?.resource) : 'N/A'}
+        {patientObservations?.length > 0 ? getDate(patientObservations[patientObservations.length - 1]?.resource) : 'N/A'}
         </h2>
         </div>
       </section>
@@ -74,7 +95,7 @@ function ObservationList() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {observations?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((entry) => {
+              {patientObservations?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((entry) => {
                 const observation = entry?.resource;
                 return (
                   <TableRow key={observation?.id}>
@@ -93,7 +114,7 @@ function ObservationList() {
         <TablePagination
           rowsPerPageOptions={[10, 25, 50]}
           component="div"
-          count={observations?.length || 0}
+          count={patientObservations?.length || 0}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
@@ -101,6 +122,7 @@ function ObservationList() {
         />
       </Paper>
     </section>
+    </>)}
     </main>
   );
 }
