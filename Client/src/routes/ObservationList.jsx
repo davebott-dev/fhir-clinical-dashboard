@@ -1,21 +1,21 @@
 import {useState} from 'react';
 import {useParams, useOutletContext} from 'react-router-dom';
-import Collapse from '@mui/material/Collapse';
-import IconButton from '@mui/material/IconButton';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import TablePagination from '@mui/material/TablePagination';
 import Paper from '@mui/material/Paper';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 
 function ObservationList() {
   const [patient, loading, patientObservations] = useOutletContext();
-  const [expandedId, setExpandedId] = useState(null);
   const observations = patientObservations??[];
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  console.log(observations);
 
   const getDate = (observation)=> {
     const date = observation?.effectiveDateTime || observation?.effectivePeriod?.start || observation?.issued;
@@ -24,16 +24,14 @@ function ObservationList() {
     return formattedDate;
   }
 
-  const isNormal = (observation)=> {
-    const interpretation = observation?.interpretation?.[0]?.coding?.[0]?.code;
-    return interpretation === 'N' || interpretation === 'normal';
-  }
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
 
-  const isAbnormal = (observation)=> {
-    const abnormalCodes = ['H', 'L', 'A', 'AA', 'HH', 'LL'];
-    const interpretation = observation?.interpretation?.[0]?.coding?.[0]?.code;
-    return abnormalCodes.includes(interpretation);
-  }
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
   return (
     <main className = "space-y-6 p-6">
@@ -49,64 +47,59 @@ function ObservationList() {
           Total Results:
         </p>
         <h2 className = "mt-2 text-3xl font-bold text-slate-800">
- {patientObservations?.length}
+        {observations?.length}
         </h2>
         </div>
         <div className = "rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <p className = "text-sm font-medium text-slate-500">
-          Normal: 
+          Last Updated:
         </p>
         <h2 className = "mt-2 text-3xl font-bold text-slate-800">
-          {patientObservations?.filter(isNormal).length || 0}
-        </h2>
-        </div>
-        <div className = "rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <p className = "text-sm font-medium text-slate-500">
-          Abnormal: 
-        </p>
-        <h2 className = "mt-2 text-3xl font-bold text-slate-800">
-          {patientObservations?.filter(isAbnormal).length || 0}
+        {observations?.length > 0 ? getDate(observations[observations.length - 1]?.resource) : 'N/A'}
         </h2>
         </div>
       </section>
     <section>
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell />
-              <TableCell>Observation ID</TableCell>
-              <TableCell>Code</TableCell>
-              <TableCell>Value</TableCell>
-              <TableCell>Unit</TableCell>
-              <TableCell>Reference Range</TableCell>
-              <TableCell>Interpretation</TableCell>
-              <TableCell>Effective Date</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {patientObservations?.map((entry) => {
-              const observation = entry?.resource;
-              return (
-                <TableRow key={observation?.id} aria-hidden={!open ? true: undefined}>
-                   <TableCell>
-                <IconButton onClick={() => setOpen(!open)}>
-                  {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-                </IconButton>
-              </TableCell>
-                  <TableCell>{observation?.id}</TableCell>
-                  <TableCell>N/A</TableCell>
-                  <TableCell>N/A</TableCell>
-                  <TableCell>N/A</TableCell>
-                  <TableCell>N/A </TableCell>
-                  <TableCell>N/A</TableCell>
-                  <TableCell>N/A</TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+        <TableContainer sx={{ maxHeight: 500 }}>
+          <Table stickyHeader>
+            <TableHead>
+              <TableRow>
+                <TableCell align="left">Observation ID</TableCell>
+                <TableCell align="left">Observation Name</TableCell>
+                <TableCell align="left">LOINC Code</TableCell>
+                <TableCell align="left">Value</TableCell>
+                <TableCell align="left">Unit</TableCell>
+                <TableCell align="left">Effective Date</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {observations?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((entry) => {
+                const observation = entry?.resource;
+                return (
+                  <TableRow key={observation?.id}>
+                    <TableCell align="left">{observation?.id || 'N/A'}</TableCell>
+                    <TableCell align="left">{observation?.code?.coding?.[0]?.display || 'N/A'}</TableCell>
+                    <TableCell align="left">{observation?.code?.coding?.[0]?.code || 'N/A'}</TableCell>
+                    <TableCell align="left">{observation?.valueQuantity?.value || 'N/A'}</TableCell>
+                    <TableCell align="left">{observation?.valueQuantity?.unit || 'N/A'}</TableCell>
+                    <TableCell align="left">{getDate(observation)}</TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <TablePagination
+          rowsPerPageOptions={[10, 25, 50]}
+          component="div"
+          count={observations?.length || 0}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
+      </Paper>
     </section>
     </main>
   );
