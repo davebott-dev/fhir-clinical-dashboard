@@ -80,6 +80,27 @@ function ObservationList() {
         </h2>
         </div>
       </section>
+      {/* Observation Table Search Bar */}
+      <section>
+         <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.5 3a5.5 5.5 0 103.446 9.787l3.634 3.633 1.414-1.414-3.633-3.634A5.5 5.5 0 008.5 3zM5 8.5a3.5 3.5 0 117 0 3.5 3.5 0 01-7 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+        <input
+          type="text"
+          placeholder="Search observations by observation name or LOINC code..."
+          className="w-full p-2 border border-slate-200 rounded-lg"
+        />
+      </section>
     <section>
       <Paper sx={{ width: '100%', overflow: 'hidden' }}>
         <TableContainer sx={{ maxHeight: 500 }}>

@@ -18,7 +18,6 @@ function PatientLayout() {
   const navigate = useNavigate();
   const [patient, setPatient] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
-  const [patientObservations, setPatientObservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [openModal, setOpenModal] = useState(false);
@@ -32,9 +31,6 @@ function PatientLayout() {
         const response = await fetch(`https://hapi.fhir.org/baseR4/Patient/${patientId}`);
         const data = await response.json();
         setPatient(data);
-        const observationsResponse = await fetch(`https://hapi.fhir.org/baseR4/Observation?patient=${patientId}`);
-        const observationsData = await observationsResponse.json();
-        setPatientObservations(observationsData.entry || []);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching patient data:', error);
@@ -143,7 +139,7 @@ function PatientLayout() {
         
       </section>
       <div className="mt-6">
-      <Outlet context={ [patient ,loading, patientObservations] } />
+      <Outlet context={ [patient] } />
       </div>
       <Snackbar
         open={open}
