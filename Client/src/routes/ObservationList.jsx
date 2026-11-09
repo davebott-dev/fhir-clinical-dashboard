@@ -8,6 +8,9 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import TablePagination from '@mui/material/TablePagination';
 import Paper from '@mui/material/Paper';
+import IconButton from '@mui/material/IconButton';
+import AddIcon from '@mui/icons-material/Add';
+import ObservationModal from '../components/observationModal';
 
 function ObservationList() {
   const [patient] = useOutletContext();
@@ -16,6 +19,9 @@ function ObservationList() {
   const [loading,setLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [open, setOpen] = useState(false);
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
 
 
   // Filter observations based on search term
@@ -54,7 +60,7 @@ function ObservationList() {
     } finally {
       setLoading(false);
     }
-  }, [patient?.id]);
+  }, [patient?.id, open]);
 
   const getDate = (observation)=> {
     const date = observation?.effectiveDateTime || observation?.effectivePeriod?.start || observation?.issued;
@@ -101,9 +107,9 @@ function ObservationList() {
         </h2>
         </div>
       </section>
-      {/* Observation Table Search Bar */}
-      <section>
-       <div className="mb-5">
+      {/* Observation Table Search Bar and Add button */}
+      <section className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+       <div className="w-full sm:max-w-md">
                 <label
                     htmlFor="observation-search"
                     className="block text-sm font-medium text-gray-700 mb-2"
@@ -117,9 +123,12 @@ function ObservationList() {
                     placeholder="Search by observation name or LOINC code..."
                     value={searchTerm}
                     onChange={(event) => setSearchTerm(event.target.value)}
-                    className="w-full md:w-1/2 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 bg-white rounded-lg px-4 py-2.5 text-sm text-gray-700 placeholder-gray-400 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
             </div>
+        <IconButton color="primary" onClick={handleOpen} className ="!rounded-lg !bg-blue-600 !text-white hover:!bg-blue-700 !shadow-sm !p-2.5">
+            <AddIcon />
+        </IconButton>
       </section>
     <section>
       <Paper sx={{ width: '100%', overflow: 'hidden' }}>
@@ -229,6 +238,8 @@ function ObservationList() {
       </Paper>
     </section>
     </>)}
+          <ObservationModal open={open} handleClose={handleClose} patientId={patient?.id} />
+
     </main>
   );
 }
