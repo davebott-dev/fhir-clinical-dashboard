@@ -10,6 +10,9 @@ import TablePagination from '@mui/material/TablePagination';
 import Paper from '@mui/material/Paper';
 import IconButton from '@mui/material/IconButton';
 import AddIcon from '@mui/icons-material/Add';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import ObservationModal from '../components/observationModal';
 
 function ObservationList() {
@@ -20,12 +23,20 @@ function ObservationList() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [open, setOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedObservation, setSelectedObservation] = useState(null);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
+  // Sort observations by date in descending order
+  const sortedObservations= [...patientObservations].sort((a,b) => {
+    const dateA = new Date(a?.resource?.effectiveDateTime || a?.resource?.effectivePeriod?.start || a?.resource?.issued);
+    const dateB = new Date(b?.resource?.effectiveDateTime || b?.resource?.effectivePeriod?.start || b?.resource?.issued);
+    return dateB - dateA;
+  });
 
   // Filter observations based on search term
-   const filteredObservations = patientObservations.filter((entry) => {
+   const filteredObservations = sortedObservations.filter((entry) => {
       const observation = entry?.resource;
       const observationName =
             observation?.code?.coding?.[0]?.display || '';
@@ -78,6 +89,27 @@ function ObservationList() {
     setPage(0);
   };``
 
+  const handleEditObservation = () => {
+    // Implement edit observation logic here
+    console.log('Edit observation clicked');
+  }
+
+  const handleDeleteObservation = async(observationId) => {
+    console.log('Delete observation clicked for ID:', observationId);
+      if (window.confirm('Are you sure you want to delete this observation?')) {
+      try{
+        await fetch(`https://hapi.fhir.org/baseR4/Observation/${observationId}`, {
+          method: 'DELETE',
+        });
+        // Remove the deleted observation from the state
+        setPatientObservations((prevObservations) =>
+          prevObservations.filter((entry) => entry.resource.id !== observationId)
+        );
+      } catch (error) {
+        console.error('Error deleting observation:', error);
+      }
+    }
+  };
  
   return (
     <main className = "space-y-6 p-6">
@@ -155,6 +187,9 @@ function ObservationList() {
                             <TableCell>
                                 <strong>Status</strong>
                             </TableCell>
+
+                            <TableCell>
+                            </TableCell>
                         </TableRow>
                     </TableHead>
 
@@ -211,6 +246,33 @@ function ObservationList() {
                                         <TableCell>
                                             {status}
                                         </TableCell>
+
+                                        <TableCell>
+                                            <IconButton onClick={(event) => {
+                                                setAnchorEl(event.currentTarget);
+                                                setSelectedObservation(observation?.id);
+                                            }}>
+                                                <MoreVertIcon />
+                                            </IconButton>
+                                              <Menu
+                                                    anchorEl={anchorEl}
+                                                    open={Boolean(anchorEl)}
+                                                    onClose={() => setAnchorEl(null)}
+                                                    elevation={1}
+                                                    slotProps = {{
+                                                        paper: {
+                                                            sx: {
+                                                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                                                                border: '1px solid #e0e0e0',
+                                                                minWidth: '150px'
+                                                            }
+                                                        }
+                                                    }}
+                                                  >
+                                                    <MenuItem onClick={() => { setAnchorEl(null); handleEditObservation(); }}>Edit Observation</MenuItem>
+                                                    <MenuItem onClick={() => { setAnchorEl(null); handleDeleteObservation(selectedObservation); }}>Delete Observation</MenuItem>
+                                                  </Menu>
+                                        </TableCell>
                                     </TableRow>
                                 );
                             })
@@ -228,7 +290,7 @@ function ObservationList() {
         <TablePagination
           rowsPerPageOptions={[10, 25, 50]}
           component="div"
-          count={patientObservations?.length || 0}
+          count={paginatedObservations?.length || 0}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
