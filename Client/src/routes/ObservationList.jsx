@@ -250,7 +250,7 @@ function ObservationList() {
                                         <TableCell>
                                             <IconButton onClick={(event) => {
                                                 setAnchorEl(event.currentTarget);
-                                                setSelectedObservation(observation?.id);
+                                                setSelectedObservation(observation?.id); // store the selected observation
                                             }}>
                                                 <MoreVertIcon />
                                             </IconButton>

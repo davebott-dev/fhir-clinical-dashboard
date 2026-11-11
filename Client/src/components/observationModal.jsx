@@ -13,9 +13,7 @@ function ObservationModal({open, handleClose, patientId}) {
     const [observationInterpretation, setObservationInterpretation] = useState('');
     const [observationEncounter, setObservationEncounter] = useState('');
     
-
-    //fix issue of not re-rendering on form submission
-    
+ 
     const createObservation = async (e) => {
         e.preventDefault(); //prevent default form submission;
         setLoading(true);
