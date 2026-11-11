@@ -55,6 +55,7 @@ function MedicationModal({open, handleClose, patientId, onMedicationCreated}) {
             setLoading(false);
         }
     }
+    //add medication search field using rxnav api
 
     return (
         <Modal
