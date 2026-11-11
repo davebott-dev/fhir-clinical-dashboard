@@ -24,14 +24,22 @@ function MedicationModal({open, handleClose, patientId}) {
                 body: JSON.stringify({
                     resourceType: 'MedicationRequest',
                     status: status,
+                    intent: "order",
                     subject: {
                         reference: `Patient/${patientId}`
                     },
-                    authoredOn: observationDate,
-                    dosageInstruction: dosageInstructions,
-                    requester: {
-                        reference: `Practitioner/${orderedBy}`
-                    }
+                    medicationCodeableConcept:{
+                        text: medicationName
+                    },
+                    dosageInstruction: [
+                        {
+                            text: dosageInstructions
+                        }
+                    ],
+                    authoredOn: new Date(authoredOnDate).toISOString(),                 
+                    // requester: {
+                    //     reference: `Practitioner/${orderedBy}`
+                    // }
                 })
 
             });
@@ -70,7 +78,7 @@ function MedicationModal({open, handleClose, patientId}) {
 
                             <div className="sm:col-span-2">
                                 <label
-                                    htmlFor="observation-name"
+                                    htmlFor="medication-name"
                                     className="mb-2 block text-sm font-medium text-gray-700"
                                 >
                                     Medication Name
@@ -142,8 +150,13 @@ function MedicationModal({open, handleClose, patientId}) {
                                     className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                                 >
                                     <option value="">Select status</option>
-                                    <option value="A">Active</option>
-                                    <option value="I">Inactive</option>
+                                    <option value="active">Active</option>
+                                    <option value="on-hold">On Hold</option>
+                                    <option value="cancelled">Cancelled</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="stopped">Stopped</option>
+                                    <option value="draft">Draft</option>
+                                   
                                 </select>
                             </div>
 

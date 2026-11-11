@@ -70,6 +70,13 @@ function MedicationList() {
       console.log('delete medication')
     }
 
+    const getDate = (medication)=> {
+    const date = medication?.authoredOn;
+    if(!date) return 'N/A';
+    const formattedDate = new Date(date).toLocaleDateString();
+    return formattedDate;
+  }
+
   return (
       <main className = "space-y-6 p-6">
       {loading ? <p>Loading...</p> : (
@@ -187,9 +194,6 @@ function MedicationList() {
                                 const orderedBy =
                                     medication?.requester?.reference || 'N/A';
 
-                                const datePrescribed =
-                                    medication?.authoredOn || 'N/A';
-
                                 return (
                                     <TableRow key={medication.id}>
                                         <TableCell>
@@ -209,7 +213,7 @@ function MedicationList() {
                                         </TableCell>
 
                                         <TableCell>
-                                            {getDate(medication?.authoredOn)}
+                                            {getDate(medication)}
                                         </TableCell>
 
                                         <TableCell>
