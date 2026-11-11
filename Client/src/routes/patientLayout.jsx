@@ -96,7 +96,7 @@ function PatientLayout() {
 
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
-              Patient Overview
+              Patient Information
             </p>
 
             <h1 className="mt-1 text-2xl font-bold text-slate-900">
