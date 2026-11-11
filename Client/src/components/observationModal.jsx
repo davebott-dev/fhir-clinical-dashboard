@@ -3,7 +3,7 @@ import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 
-function ObservationModal({open, handleClose, patientId}) {
+function ObservationModal({open, handleClose, patientId, onObservationCreated}) {
     const [observationName, setObservationName] = useState('');
     const [loading, setLoading] = useState(false);
     const [loinc, setLoinc] = useState('');
@@ -46,16 +46,19 @@ function ObservationModal({open, handleClose, patientId}) {
                         unit: observationUnit
                     }
                 })
-
             });
-            setLoading(false);
-            handleClose();
+            const data = await response.json();
             if(!response.ok) {
                 throw new Error(`Failed to create observation: ${response.statusText}`);
             }
+            onObservationCreated?.(data);
+            handleClose();
         } catch(error){
             console.error('Error creating observation:', error);
-        } 
+        } finally {
+            handleClose();
+
+        }
     }
 
     return (

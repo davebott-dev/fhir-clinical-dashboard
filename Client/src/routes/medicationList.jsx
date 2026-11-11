@@ -13,12 +13,13 @@ import AddIcon from '@mui/icons-material/Add';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+import CircularProgress from '@mui/material/CircularProgress';
 import MedicationModal from '../components/medicationModal';
 
 function MedicationList() {
   const [patient] = useOutletContext();
   const [patientMedications, setPatientMedications] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -28,24 +29,27 @@ function MedicationList() {
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  useEffect(() => {
-    const fetchPatientMedications = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch(`https://hapi.fhir.org/baseR4/MedicationRequest?patient=${patient?.id}`);
+  useEffect(()=> {
+        const fetchData = async() => {
+          if(!patient?.id) return;
+          setLoading(true);
+      try{
+          const response = await fetch(`https://hapi.fhir.org/baseR4/MedicationRequest?patient=${patient?.id}`);
+        if(!response.ok)  {
+          throw new error (
+            'unable to create new medication'
+          )
+        }
         const data = await response.json();
         setPatientMedications(data.entry ?? []);
       } catch (error) {
         console.error('Failed to fetch patient medications:', error);
-      } finally {
+      } finally { 
         setLoading(false);
       }
     };
-
-    fetchPatientMedications();
-  }, [patient?.id]);
-
-  console.log(patientMedications);
+    fetchData();
+  }, [patient?.id, open])
 
     // Pagination
     const paginatedMedications = patientMedications.slice(
@@ -66,8 +70,28 @@ function MedicationList() {
       console.log('edit medication')
     }
 
-    const handleDeleteMedication = () => {
-      console.log('delete medication')
+   const handleDeleteMedication = async(medicationId) => {
+      if (window.confirm('Are you sure you want to delete this medication request?')) {
+      try{
+        await fetch(`https://hapi.fhir.org/baseR4/MedicationRequest/${medicationId}`, {
+          method: 'DELETE',
+        });
+        // Remove the deleted medication from the state
+        setPatientMedications((prevMedications) =>
+          prevMedications.filter((entry) => entry.resource.id !== medicationId)
+        );
+      } catch (error) {
+        console.error('Error deleting observation:', error);
+      }
+    }
+  };
+
+    const handleCreatedMedication = (newmedication) => {
+      setPatientMedications(curr=> [
+        {resource: newmedication},
+        ...curr //spread syntax to copy current content
+      ]);
+      setPage(0);
     }
 
     const getDate = (medication)=> {
@@ -79,7 +103,6 @@ function MedicationList() {
 
   return (
       <main className = "space-y-6 p-6">
-      {loading ? <p>Loading...</p> : (
         <>
       {/* Medication List Header Section */}
       <section>
@@ -170,7 +193,8 @@ function MedicationList() {
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={5} align="center">
+                                <TableCell colSpan={6} align="center">
+                                    <CircularProgress size={28}/>
                                     Loading medications...
                                 </TableCell>
                             </TableRow>
@@ -238,8 +262,8 @@ function MedicationList() {
                                                         }
                                                     }}
                                                   >
-                                                    <MenuItem onClick={() => { setAnchorEl(null); handleEditMedication(); }}>Edit Observation</MenuItem>
-                                                    <MenuItem onClick={() => { setAnchorEl(null); handleDeleteMedication(selectedMedication); }}>Delete Observation</MenuItem>
+                                                    <MenuItem onClick={() => { setAnchorEl(null); handleEditMedication(); }}>Edit Medication</MenuItem>
+                                                    <MenuItem onClick={() => { setAnchorEl(null); handleDeleteMedication(selectedMedication); }}>Delete Medication</MenuItem>
                                                   </Menu>
                                         </TableCell>
                                     </TableRow>
@@ -259,7 +283,7 @@ function MedicationList() {
         <TablePagination
           rowsPerPageOptions={[10, 25, 50]}
           component="div"
-          count={paginatedMedications?.length || 0}
+          count={patientMedications?.length || 0}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
@@ -268,8 +292,8 @@ function MedicationList() {
         </TableContainer>
       </Paper>
     </section>
-    </>)}
-      <MedicationModal open={open} handleClose={handleClose} patientId={patient?.id}/>
+    </>
+      <MedicationModal open={open} handleClose={handleClose} patientId={patient?.id} onMedicationCreated={handleCreatedMedication}/>
     </main>
   );
 }

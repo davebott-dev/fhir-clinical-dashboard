@@ -13,6 +13,7 @@ import AddIcon from '@mui/icons-material/Add';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+import CircularProgress from '@mui/material/CircularProgress';
 import ObservationModal from '../components/observationModal';
 
 function ObservationList() {
@@ -55,23 +56,24 @@ function ObservationList() {
     );
 
    useEffect(() => {
-    setLoading(true);
-    try{
       const fetchData = async () => {
+        if(!patient?.id) return;
+        setLoading(true);
+      try{
         const response = await fetch(`https://hapi.fhir.org/baseR4/Observation?patient=${patient?.id}`);
         if(!response.ok) {
           throw new Error(`Failed to fetch patient observations: ${response.statusText}`);
         }
         const data = await response.json();
         setPatientObservations(data.entry ?? []);
-      };
-      fetchData();
-    }catch(error){
+    } catch(error){
       console.error('Error fetching patient observations:', error);
     } finally {
       setLoading(false);
     }
-  }, [patient?.id, open]);
+  };
+    fetchData();
+}, [patient?.id, open]);
 
   const getDate = (observation)=> {
     const date = observation?.effectiveDateTime || observation?.effectivePeriod?.start || observation?.issued;
@@ -94,6 +96,15 @@ function ObservationList() {
     console.log('Edit observation clicked');
   }
 
+  //update table immediately before backend
+  const handleCreatedObservation = (newobservation) => {
+      setPatientObservation(curr=> [
+        {resource: newobservation},
+        ...curr //spread syntax to copy current content
+      ]);
+      setPage(0);
+    }  
+
   const handleDeleteObservation = async(observationId) => {
     console.log('Delete observation clicked for ID:', observationId);
       if (window.confirm('Are you sure you want to delete this observation?')) {
@@ -113,7 +124,6 @@ function ObservationList() {
  
   return (
     <main className = "space-y-6 p-6">
-      {loading ? <p>Loading...</p> : (
         <>
       {/* Observation Header Section */}
       <section>
@@ -196,8 +206,9 @@ function ObservationList() {
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={5} align="center">
-                                    Loading observations...
+                                <TableCell colSpan={6} align="center">
+                                   <CircularProgress size={28}/>
+                                   Loading observations...
                                 </TableCell>
                             </TableRow>
                         ) : paginatedObservations.length > 0 ? (
@@ -290,7 +301,7 @@ function ObservationList() {
         <TablePagination
           rowsPerPageOptions={[10, 25, 50]}
           component="div"
-          count={paginatedObservations?.length || 0}
+          count={patientObservations?.length || 0}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
@@ -299,9 +310,8 @@ function ObservationList() {
         </TableContainer>
       </Paper>
     </section>
-    </>)}
-          <ObservationModal open={open} handleClose={handleClose} patientId={patient?.id} />
-
+    </>
+          <ObservationModal open={open} handleClose={handleClose} patientId={patient?.id} onObservationCreated={handleCreatedObservation}/>
     </main>
   );
 }

@@ -3,7 +3,7 @@ import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 
-function MedicationModal({open, handleClose, patientId}) {
+function MedicationModal({open, handleClose, patientId, onMedicationCreated}) {
     const [medicationName, setMedicationName] = useState('');
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState('');
@@ -43,14 +43,17 @@ function MedicationModal({open, handleClose, patientId}) {
                 })
 
             });
-            setLoading(false);
-            handleClose();
+            const data = await response.json();
             if(!response.ok) {
-                throw new Error(`Failed to create medication request: ${response.statusText}`);
+                throw new Error(`Failed to create medication request${response.statusText}`);
             }
+            onMedicationCreated?.(data);
+            handleClose();
         } catch(error){
             console.error('Error creating medication request:', error);
-        } 
+        } finally{
+            setLoading(false);
+        }
     }
 
     return (
