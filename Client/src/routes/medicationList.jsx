@@ -51,10 +51,20 @@ function MedicationList() {
     fetchData();
   }, [patient?.id, open])
 
-    // Pagination
-    const paginatedMedications = patientMedications.slice(
-      page * rowsPerPage,
-      page * rowsPerPage + rowsPerPage
+  // Filter medications based on search term
+   const filteredObservations = patientMedications.filter((entry) => {
+      const medication = entry?.resource;
+      const medicationName =
+            medication?.medicationCodeableConcept?.text || '';
+        return (
+            medicationName.toLowerCase().includes(searchTerm.toLowerCase()) 
+        );
+    });
+
+      // Pagination
+    const paginatedMedications = filteredObservations.slice(
+        page * rowsPerPage,
+        page * rowsPerPage + rowsPerPage
     );
 
   const handleChangePage = (event, newPage) => {
@@ -124,7 +134,7 @@ function MedicationList() {
           Active Medications:
         </p>
         <h2 className = "mt-2 text-3xl font-bold text-slate-800">
-        {patientMedications?.length > 0 ? getDate(patientMedications[patientMedications.length - 1]?.resource) : 'N/A'}
+        {patientMedications?.filter((medication)=> medication?.resource?.status.toLowerCase() ==='active').length}
         </h2>
         </div>
           <div className = "rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -132,7 +142,7 @@ function MedicationList() {
           Inactive Medications:
         </p>
         <h2 className = "mt-2 text-3xl font-bold text-slate-800">
-        {patientMedications?.length > 0 ? getDate(patientMedications[patientMedications.length - 1]?.resource) : 'N/A'}
+        {patientMedications?.filter((medication)=> medication?.resource?.status.toLowerCase() !='active').length}
         </h2>
         </div>
       </section>
@@ -149,7 +159,7 @@ function MedicationList() {
                 <input
                     id="medication-search"
                     type="text"
-                    placeholder="Search by medication name or code..."
+                    placeholder="Search by medication name..."
                     value={searchTerm}
                     onChange={(event) => setSearchTerm(event.target.value)}
                     className="w-full border border-gray-300 bg-white rounded-lg px-4 py-2.5 text-sm text-gray-700 placeholder-gray-400 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
