@@ -52,7 +52,7 @@ function MedicationList() {
   }, [patient?.id, open])
 
   // Filter medications based on search term
-   const filteredObservations = patientMedications.filter((entry) => {
+   const filteredMedications = patientMedications.filter((entry) => {
       const medication = entry?.resource;
       const medicationName =
             medication?.medicationCodeableConcept?.text || '';
@@ -62,7 +62,7 @@ function MedicationList() {
     });
 
       // Pagination
-    const paginatedMedications = filteredObservations.slice(
+    const paginatedMedications = filteredMedications.slice(
         page * rowsPerPage,
         page * rowsPerPage + rowsPerPage
     );
