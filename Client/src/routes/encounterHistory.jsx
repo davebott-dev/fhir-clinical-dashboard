@@ -49,16 +49,24 @@ function EncounterHistory() {
       }
     };
     fetchData();
-  }, [patient?.id, open])
+  }, [patient?.id, open]);
+
+    const sortedEncounters = [...patientEncounters].sort((a,b)=>{
+      let date1 = new Date(a?.resource?.period?.start);
+      let date2 = new Date(b?.resource?.period?.start);
+      return date2-date1
+  })
 
   // Filter encounters based on search term
-   const filteredEncounters = patientEncounters.filter((entry) => {
+   const filteredEncounters = sortedEncounters.filter((entry) => {
       const encounter = entry?.resource;
-      // const encounterName =
-      //       encounter?.encounterCodeableConcept?.text || '';
-      //   return (
-      //       encounterName.toLowerCase().includes(searchTerm.toLowerCase()) 
-      //   );
+      const serviceProvider =
+            encounter?.serviceProvider?.display || '';
+      const reasonCode = encounter?.reasonCode?.[0]?.text;
+        return (
+            serviceProvider.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            reasonCode.toLowerCase().includes(searchTerm.toLowerCase())
+        );
     });
 
       // Pagination
@@ -105,12 +113,14 @@ function EncounterHistory() {
     }
 
     const getDate = (encounter)=> {
-    const date = encounter?.authoredOn;
+    const date = encounter?.period?.start;
     if(!date) return 'N/A';
     const formattedDate = new Date(date).toLocaleDateString();
     return formattedDate;
   }
+  
 
+  console.log(patientEncounters)
   return (
       <main className = "space-y-6 p-6">
         <>
@@ -131,10 +141,10 @@ function EncounterHistory() {
         </div>
         <div className = "rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <p className = "text-sm font-medium text-slate-500">
-          Active Encounters:
+          Most Recent Encounter:
         </p>
         <h2 className = "mt-2 text-3xl font-bold text-slate-800">
-        {patientEncounters?.filter((encounter)=> encounter?.resource?.status.toLowerCase() ==='active').length}
+        {getDate(sortedEncounters[0]?.resource)}
         </h2>
         </div>
  
@@ -169,11 +179,11 @@ function EncounterHistory() {
                     <TableHead>
                         <TableRow>
                             <TableCell>
-                                <strong>Encounter Name</strong>
+                                <strong>Service Provider</strong>
                             </TableCell>
 
                             <TableCell>
-                                <strong>Instructions</strong>
+                                <strong>Description</strong>
                             </TableCell>
 
                             <TableCell>
@@ -181,11 +191,11 @@ function EncounterHistory() {
                             </TableCell>
 
                             <TableCell>
-                                <strong>Ordered By</strong>
+                                <strong>Type</strong>
                             </TableCell>
 
                             <TableCell>
-                                <strong>Date Prescribed</strong>
+                                <strong>Length of Visit</strong>
                             </TableCell>
 
                             <TableCell>
@@ -198,37 +208,36 @@ function EncounterHistory() {
                             <TableRow>
                                 <TableCell colSpan={6} align="center">
                                     <CircularProgress size={28}/>
-                                    Loading encounter...
+                                    Loading encounters...
                                 </TableCell>
                             </TableRow>
                         ) : paginatedEncounters.length > 0 ? (
                             paginatedEncounters.map((entry) => {
                                 const encounter = entry.resource;
 
-                                const encounterName =
-                                    encounter?.encounterCodeableConcept?.text ||
-                                    encounter?.code?.text ||
+                                const serviceProvider =
+                                    encounter?.serviceProvider?.display ||
                                     'N/A';
 
-                                const dosageInstructions =
-                                    encounter?.dosageInstruction?.[0]?.text || 
+                                const description =
+                                    encounter?.reasonCode?.[0]?.text || 
                                     'N/A';
 
                                 const status =
                                     encounter?.status ||
                                     'N/A';
 
-                                const orderedBy =
-                                    encounter?.requester?.reference || 'N/A';
+                                const type =
+                                    encounter?.class?.display || 'N/A';
 
                                 return (
                                     <TableRow key={encounter.id}>
                                         <TableCell>
-                                            {encounterName}
+                                            {serviceProvider}
                                         </TableCell>
 
                                         <TableCell>
-                                            {dosageInstructions}
+                                            {description}
                                         </TableCell>
 
                                         <TableCell>
@@ -236,17 +245,17 @@ function EncounterHistory() {
                                         </TableCell>
 
                                         <TableCell>
-                                            {orderedBy}
+                                            {type}
                                         </TableCell>
 
                                         <TableCell>
-                                            {getDate(encounter)}
+                                            {`${(new Date(encounter?.period?.end) - new Date(encounter?.period?.start))/(1000*60*60).toFixed(2)} hours`}
                                         </TableCell>
 
                                         <TableCell>
                                             <IconButton onClick={(event) => {
                                                 setAnchorEl(event.currentTarget);
-                                                setSelectedEncounter(enconter?.id); // store the selected encounter
+                                                setSelectedEncounter(encounter?.id); // store the selected encounter
                                             }}>
                                                 <MoreVertIcon />
                                             </IconButton>
