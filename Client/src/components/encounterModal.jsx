@@ -4,53 +4,70 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 
 function EncounterModal({open, handleClose, patientId, onMedicationCreated}) {
-    const [medicationName, setMedicationName] = useState('');
+    const [serviceProvider, setServiceProvider] = useState('');
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState('');
-    const [authoredOnDate, setAuthoredOnDate] = useState('');
-    const [dosageInstructions, setDosageInstructions] = useState('');
-    const [orderedBy, setOrderedBy] = useState('');
+    const [type, setType] = useState('');
+    const [code, setCode] = useState('');
+    const [description, setDescription] = useState('');
+    const [reasonCode, setReasonCode] = useState('');
+    const [appointmentStartTime, setAppointmentStartTime] = useState('');
+    const [appointmentEndTime, setAppointmentEndTime] = useState('');
+
         
     const createEncounter = async (e) => {
         e.preventDefault(); //prevent default form submission;
         setLoading(true);
 
         try{
-            const response = await fetch('https://hapi.fhir.org/baseR4/MedicationRequest', {
+            const response = await fetch('https://hapi.fhir.org/baseR4/Encounter', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/fhir+json'
                 },
                 body: JSON.stringify({
-                    resourceType: 'MedicationRequest',
+                    resourceType: 'Encounter',
                     status: status,
-                    intent: "order",
+                    class: {
+                        system: "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+                        code: code, 
+                        display: type
+                    },
+                    type: [
+                        {
+                            coding:[
+                                {
+                                    text: description
+                                }
+                            ]
+                        }
+                    ],
                     subject: {
                         reference: `Patient/${patientId}`
                     },
-                    medicationCodeableConcept:{
-                        text: medicationName
+                    period:{
+                        start: appointmentStartTime,
+                        end: appointmentEndTime
                     },
-                    dosageInstruction: [
+                    reasonCode: [
                         {
-                            text: dosageInstructions
+                            text: reasonCode
                         }
                     ],
-                    authoredOn: new Date(authoredOnDate).toISOString(),                 
-                    // requester: {
-                    //     reference: `Practitioner/${orderedBy}`
-                    // }
+                    serviceProvider: {
+                        display: serviceProvider
+                    }
                 })
 
             });
             const data = await response.json();
             if(!response.ok) {
-                throw new Error(`Failed to create medication request${response.statusText}`);
+                throw new Error(`Failed to create encounter request${response.statusText}`);
             }
             onMedicationCreated?.(data);
             handleClose();
         } catch(error){
-            console.error('Error creating medication request:', error);
+            console.error('Error creating encounter request:', error);
         } finally{
             setLoading(false);
         }
@@ -64,17 +81,17 @@ function EncounterModal({open, handleClose, patientId, onMedicationCreated}) {
         >
             <Box className ="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl outline-none" >
                 <div className="p-6">
-                    <h2 id="medication-modal-title" className="text-lg font-semibold mb-4">Create Medication Request</h2>
-                    <p className="text-sm text-gray-500 mb-4">Fill in the details for the new medication.</p>
+                    <h2 id="medication-modal-title" className="text-lg font-semibold mb-4">Create Encounter</h2>
+                    <p className="text-sm text-gray-500 mb-4">Fill in the details for the new encounter.</p>
                 </div>
-      {/* Form for creating a new medication */}
+      {/* Form for creating a new encounter */}
 
        <form onSubmit={createEncounter} className="p-6">
 
-                    {/* Medication Details */}
+                    {/* Encounter Details */}
                     <div className="mb-6">
                         <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">
-                            Medication Details
+                            Encounter Details
                         </h3>
 
                         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -84,14 +101,14 @@ function EncounterModal({open, handleClose, patientId, onMedicationCreated}) {
                                     htmlFor="medication-name"
                                     className="mb-2 block text-sm font-medium text-gray-700"
                                 >
-                                    Medication Name
+                                    Encounter Description
                                 </label>
                                 <input
-                                    id="medication-name"
+                                    id="encounter-description"
                                     type="text"
-                                    placeholder="e.g. acetaminophen"
-                                    value={medicationName}
-                                    onChange={(e) => setMedicationName(e.target.value)}
+                                    placeholder="annual checkup"
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
                                     className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                                 />
                             </div>
