@@ -1,7 +1,8 @@
-import {useState} from 'react';
+import {useState,useEffect} from 'react';
 import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import { DataGrid } from '@mui/x-data-grid';
 
 function EncounterModal({open, handleClose, patientId, onMedicationCreated}) {
     const [serviceProvider, setServiceProvider] = useState('');
@@ -13,7 +14,16 @@ function EncounterModal({open, handleClose, patientId, onMedicationCreated}) {
     const [reasonCode, setReasonCode] = useState('');
     const [appointmentStartTime, setAppointmentStartTime] = useState('');
     const [appointmentEndTime, setAppointmentEndTime] = useState('');
+    const {data} = ({
+        rowLength:10,
+        maxColumns:5
+    });
 
+    useEffect(()=> {
+        const fetchData = async() => {
+
+        }
+    }, []);
         
     const createEncounter = async (e) => {
         e.preventDefault(); //prevent default form submission;
@@ -118,30 +128,46 @@ function EncounterModal({open, handleClose, patientId, onMedicationCreated}) {
                                     htmlFor="loinc"
                                     className="mb-2 block text-sm font-medium text-gray-700"
                                 >
-                                    Dosage Instructions
+                                    Encounter Reason
                                 </label>
                                 <textarea
-                                    id="dosage-instructions"
+                                    id="encounter-reason"
                                     type="text"
-                                    placeholder="e.g. take twice per day orally"
-                                    value={dosageInstructions}
-                                    onChange={(e) => setDosageInstructions(e.target.value)}
+                                    placeholder="e.g. check up for annual physical"
+                                    value={reasonCode}
+                                    onChange={(e) => setReasonCode(e.target.value)}
                                     className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                                 />
                             </div>
 
                             <div>
                                 <label
-                                    htmlFor="medication-date"
+                                    htmlFor="appointment-start"
                                     className="mb-2 block text-sm font-medium text-gray-700"
                                 >
-                                    Date Prescribed
+                                    Appointment Start Time
                                 </label>
                                 <input
-                                    id="medication-date"
-                                    type="date"
-                                    value={authoredOnDate}
-                                    onChange={(e) => setAuthoredOnDate(e.target.value)}
+                                    id="appointment-start"
+                                    type="datetime-local"
+                                    value={appointmentStartTime}
+                                    onChange={(e) => setAppointmentStartTime(e.target.value)}
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                                />
+                            </div>
+
+                             <div>
+                                <label
+                                    htmlFor="appointment-end"
+                                    className="mb-2 block text-sm font-medium text-gray-700"
+                                >
+                                    Appointment End Time
+                                </label>
+                                <input
+                                    id="appointment-end"
+                                    type="datetime-local"
+                                    value={appointmentEndTime}
+                                    onChange={(e) => setAppointmentEndTime(e.target.value)}
                                     className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                                 />
                             </div>
@@ -170,27 +196,22 @@ function EncounterModal({open, handleClose, patientId, onMedicationCreated}) {
                                     className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                                 >
                                     <option value="">Select status</option>
-                                    <option value="active">Active</option>
-                                    <option value="on-hold">On Hold</option>
-                                    <option value="cancelled">Cancelled</option>
-                                    <option value="completed">Completed</option>
-                                    <option value="stopped">Stopped</option>
-                                    <option value="draft">Draft</option>
-                                   
+                                    <option value="finished">Finished</option>
+
                                 </select>
                             </div>
 
                             <div>
                                 <label
-                                    htmlFor="ordered-by"
+                                    htmlFor="service-provider"
                                     className="mb-2 block text-sm font-medium text-gray-700"
                                 >
-                                    Ordered By
+                                    Service Provider
                                 </label>
                                 <select
-                                    id="ordered-by"
-                                    value={orderedBy}
-                                    onChange={(e) => setOrderedBy(e.target.value)}
+                                    id="service-provider"
+                                    value={serviceProvider}
+                                    onChange={(e) => setServiceProvider(e.target.value)}
                                     className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                                 >
                                     <option value="">Select an encounter</option>
@@ -198,6 +219,9 @@ function EncounterModal({open, handleClose, patientId, onMedicationCreated}) {
                                     <option value="encounter-2">Practitioner 2</option>
                                 </select>
                             </div>
+                            <DataGrid
+                                {...data}
+                            />
                         </div>
                     </div>
 
