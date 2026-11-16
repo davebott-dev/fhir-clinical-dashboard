@@ -1,15 +1,44 @@
-import {useState} from 'react';
+import {useState,useEffect} from 'react';
 import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Autocomplete from '@mui/material/Autocomplete';
 
 function MedicationModal({open, handleClose, patientId, onMedicationCreated}) {
     const [medicationName, setMedicationName] = useState('');
+    const [options,setOptions]=useState([]);
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState('');
     const [authoredOnDate, setAuthoredOnDate] = useState('');
     const [dosageInstructions, setDosageInstructions] = useState('');
     const [orderedBy, setOrderedBy] = useState('');
+
+    //fetch medicine options when creating a medication request
+    useEffect(()=> {
+        const fetchData = async()=>{
+            try{
+                const response = await fetch(`https://clinicaltables.nlm.nih.gov/api/rxterms/v3/search?terms=${medicationName}`)
+                if(!response.ok){
+                    throw new Error(
+                        'error fetching medicine names'
+                    )
+                }
+                const data = await response.json();
+                setOptions(data?.[1]);
+                console.log(data?.[1])
+
+                const formattedData = data?.[1].map((el,index)=>({
+                    id: index,
+                    label: el
+                }));
+                setOptions(formattedData);
+            }catch(error){
+                console.error('error fetching medicines',error);
+            }
+        }
+        fetchData();
+    },[medicationName])
         
     const createMedication = async (e) => {
         e.preventDefault(); //prevent default form submission;
@@ -55,7 +84,6 @@ function MedicationModal({open, handleClose, patientId, onMedicationCreated}) {
             setLoading(false);
         }
     }
-    //add medication search field using rxnav api
 
     return (
         <Modal
@@ -81,19 +109,20 @@ function MedicationModal({open, handleClose, patientId, onMedicationCreated}) {
                         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
 
                             <div className="sm:col-span-2">
-                                <label
-                                    htmlFor="medication-name"
-                                    className="mb-2 block text-sm font-medium text-gray-700"
-                                >
-                                    Medication Name
-                                </label>
-                                <input
+                               {/*autocomplete component used with help from MUI docs*/}
+                                <Autocomplete
                                     id="medication-name"
-                                    type="text"
-                                    placeholder="e.g. acetaminophen"
+                                    options={options}
                                     value={medicationName}
-                                    onChange={(e) => setMedicationName(e.target.value)}
-                                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                                    onInputChange={(event,newValue) => setMedicationName(newValue)}
+                                    className="border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                                    renderInput={(params)=>(
+                                        <TextField
+                                            {...params}
+                                            label="Medication Name"
+                                            placeholder="e.g. acetaminophen"
+                                        />
+                                    )}
                                 />
                             </div>
 
