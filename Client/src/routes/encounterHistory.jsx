@@ -36,7 +36,7 @@ function EncounterHistory() {
       try{
           const response = await fetch(`https://hapi.fhir.org/baseR4/Encounter?patient=${patient?.id}`);
         if(!response.ok)  {
-          throw new error (
+          throw new Error (
             'unable to create new encounter'
           )
         }
@@ -168,8 +168,10 @@ function EncounterHistory() {
                     className="w-full border border-gray-300 bg-white rounded-lg px-4 py-2.5 text-sm text-gray-700 placeholder-gray-400 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
             </div>
-        <IconButton color="primary" className ="!rounded-lg !bg-blue-600 !text-white hover:!bg-blue-700 !shadow-sm !p-2.5">
-            <AddIcon onClick={handleOpen}/>
+        <IconButton color="primary" className ="!rounded-lg !bg-blue-600 !text-white hover:!bg-blue-700 !shadow-sm !p-2.5"
+                  onClick={handleOpen}
+        >
+            <AddIcon/>
         </IconButton>
       </section>
     <section>
