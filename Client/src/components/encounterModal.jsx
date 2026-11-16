@@ -74,6 +74,15 @@ function EncounterModal({open, handleClose, patientId, onEncounterCreated}) {
   { name: "Wyoming", abbreviation: "WY" }
 ];
 
+const encounterClasses = [
+    { code: 'AMB', display: 'Ambulatory' },
+    { code: 'IMP', display: 'Inpatient' },
+    { code: 'OBSENC', display: 'Observation' },
+    { code: 'EMER', display: 'Emergency' },
+    { code: 'VR', display: 'Virtual' },
+    { code: 'HH', display: 'Home Health' },
+];
+
 //setting row and column for the hospital data grid
 const columns = [
     {field: 'name', headerName: 'Hospital Name', flex: 1, rowHeader:true},
@@ -154,7 +163,8 @@ const apiKey = import.meta.env.VITE_API_KEY;
             const response = await fetch('https://hapi.fhir.org/baseR4/Encounter', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/fhir+json'
+                    'Content-Type': 'application/fhir+json',
+                    'Accept': 'application/fhir+json'
                 },
                 body: JSON.stringify({
                     resourceType: 'Encounter',
@@ -166,19 +176,15 @@ const apiKey = import.meta.env.VITE_API_KEY;
                     },
                     type: [
                         {
-                            coding:[
-                                {
-                                    text: description
-                                }
-                            ]
+                            text: description
                         }
                     ],
                     subject: {
                         reference: `Patient/${patientId}`
                     },
                     period:{
-                        start: appointmentStartTime,
-                        end: appointmentEndTime
+                        start: new Date(appointmentStartTime).toISOString(),
+                        end: new Date(appointmentEndTime).toISOString()
                     },
                     reasonCode: [
                         {
@@ -192,6 +198,7 @@ const apiKey = import.meta.env.VITE_API_KEY;
 
             });
             const data = await response.json();
+            console.log(data)
             if(!response.ok) {
                 throw new Error(`Failed to create encounter request${response.statusText}`);
             }
@@ -322,7 +329,30 @@ const apiKey = import.meta.env.VITE_API_KEY;
 
                                 </select>
                             </div>
-
+                              <div>
+                                <label
+                                    htmlFor="type"
+                                    className="mb-2 block text-sm font-medium text-gray-700"
+                                >
+                                    Type of Visit
+                                </label>
+                                <select
+                                    id="type"
+                                    value={type}
+                                    onChange={(e) => {
+                                        setCode(e.target.value);
+                                        setType(encounterClasses.find(item=> item.code ===e.target.value)?.display);
+                                    
+                                    }}
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                                >
+                                    {encounterClasses.map(encounter=>{
+                                        return(
+                                            <option value={encounter.code}>{encounter.display}</option>
+                                        )
+                                    })}
+                                </select>
+                            </div>
 
                           
                         </div>
