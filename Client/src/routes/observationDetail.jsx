@@ -2,12 +2,11 @@ import {useState, useEffect} from 'react';
 import {useParams} from 'react-router-dom';
 
 function ObservationDetail() {
-    const {patientID} = useParams();
-    const {observationID} =useParams();
+    const {patientId,observationId} = useParams();
 
     return(
         <div>
-            observation detail page for {observationID}
+            observation detail page for {observationId}
         </div>
     )
 }

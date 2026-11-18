@@ -2,12 +2,11 @@ import {useState, useEffect} from 'react';
 import {useParams} from 'react-router-dom';
 
 function MedicationDetail() {
-    const {patientID} = useParams();
-    const {medicationRequestID} =useParams();
+    const {patientId,medicationRequestId} = useParams();
 
     return(
         <div>
-            medication detail page for {medicationRequestID}
+            medication detail page for {medicationRequestId}
         </div>
     )
 }

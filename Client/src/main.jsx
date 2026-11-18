@@ -64,15 +64,15 @@ const router = createBrowserRouter([
         element: <PatientFiles />
       },
       {
-        path: 'detail/:observationId',
+        path: ':patientId/observation-detail/:observationId',
         element: <ObservationDetail/>
       },
        {
-        path: 'detail/:medicationId',
+        path: ':patientId/medication-request-detail/:medicationRequestId',
         element: <MedicationDetail/>
       },
        {
-        path: 'detail/:encounterId',
+        path: ':patientId/encounter-detail/:encounterId',
         element: <EncounterDetail/>
       }
         ]

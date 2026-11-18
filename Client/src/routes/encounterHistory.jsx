@@ -1,5 +1,5 @@
 import {useState,useEffect} from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, NavLink } from 'react-router-dom';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -180,6 +180,9 @@ function EncounterHistory() {
                 <Table>
                     <TableHead>
                         <TableRow>
+                          <TableCell>
+                            <strong>Encounter ID</strong>
+                          </TableCell>
                             <TableCell>
                                 <strong>Service Provider</strong>
                             </TableCell>
@@ -234,6 +237,11 @@ function EncounterHistory() {
 
                                 return (
                                     <TableRow key={encounter.id}>
+                                      <TableCell>
+                                        <NavLink to={`/patient/${patient.id}/encounter-detail/${encounter.id}`}>
+                                          {encounter.id}
+                                        </NavLink>
+                                      </TableCell>
                                         <TableCell>
                                             {serviceProvider}
                                         </TableCell>

@@ -1,5 +1,5 @@
 import {useState, useEffect} from 'react';
-import {useOutletContext} from 'react-router-dom';
+import {useOutletContext, NavLink} from 'react-router-dom';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -178,6 +178,9 @@ function ObservationList() {
                 <Table>
                     <TableHead>
                         <TableRow>
+                          <TableCell>
+                            <strong>Observation ID</strong>
+                          </TableCell>
                             <TableCell>
                                 <strong>Observation</strong>
                             </TableCell>
@@ -238,6 +241,11 @@ function ObservationList() {
 
                                 return (
                                     <TableRow key={observation.id}>
+                                      <TableCell>
+                                        <NavLink to={`/patient/${patient.id}/observation-detail/${observation.id}`}>
+                                        {observation.id}
+                                        </NavLink>
+                                      </TableCell>
                                         <TableCell>
                                             {observationName}
                                         </TableCell>
