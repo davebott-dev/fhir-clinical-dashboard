@@ -1,5 +1,5 @@
 import {useState,useEffect} from 'react';
-import { useOutletContext, NavLink } from 'react-router-dom';
+import { useOutletContext, useNavigate } from 'react-router-dom';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -28,6 +28,7 @@ function EncounterHistory() {
   const [selectedEncounter, setSelectedEncounter] = useState(null);  
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
+  const navigate = useNavigate();
 
   useEffect(()=> {
         const fetchData = async() => {
@@ -105,7 +106,7 @@ function EncounterHistory() {
   };
 
     const handleCreatedEncounter = (newencounter) => {
-      setPatientEncounter(curr=> [
+      setPatientEncounters(curr=> [
         {resource: newencounter},
         ...curr //spread syntax to copy current content
       ]);
@@ -237,10 +238,12 @@ function EncounterHistory() {
 
                                 return (
                                     <TableRow key={encounter.id}>
-                                      <TableCell>
-                                        <NavLink to={`/patient/${patient.id}/encounter-detail/${encounter.id}`}>
+                                      <TableCell
+                                      onClick= {(e)=>navigate(`/patient/${patient.id}/encounter-detail/${encounter.id}`,
+                                        {state:{encounter: encounter}})}
+                                        className="cursor-pointer text-blue-600 hover:underline"
+                                      >
                                           {encounter.id}
-                                        </NavLink>
                                       </TableCell>
                                         <TableCell>
                                             {serviceProvider}
