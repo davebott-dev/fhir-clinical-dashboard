@@ -9,7 +9,8 @@ function MedicationDetail() {
     const medicationData = location.state?.medication || {};
     const navigate = useNavigate();
 
-
+ // tailwind CSS generated with help of GenAI
+ 
    return (
         <div className="min-h-screen bg-slate-50 p-6">
 
