@@ -1,5 +1,5 @@
 import {useState,useEffect} from 'react';
-import { useOutletContext, NavLink } from 'react-router-dom';
+import { useOutletContext, useNavigate } from 'react-router-dom';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -28,6 +28,7 @@ function MedicationList() {
   const [selectedMedication, setSelectedMedication] = useState(null);  
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
+  const navigate = useNavigate();
 
   useEffect(()=> {
         const fetchData = async() => {
@@ -236,10 +237,12 @@ function MedicationList() {
 
                                 return (
                                     <TableRow key={medication.id}>
-                                      <TableCell>
-                                        <NavLink to ={`/patient/${patient.id}/medication-request-detail/${medication.id}`}>
-                                        {medication.id}
-                                        </NavLink>
+                                          <TableCell
+                                           onClick= {(e)=>navigate(`/patient/${patient.id}/medication-request-detail/${medication.id}`,
+                                                   {state:{medication: medication}})}
+                                                   className="cursor-pointer text-blue-600 hover:underline"
+                                                  >
+                                                    {medication.id}
                                       </TableCell>
                                         <TableCell>
                                             {medicationName}

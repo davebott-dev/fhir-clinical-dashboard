@@ -18,7 +18,6 @@ function EncounterDetail() {
         setValue(newValue);
     };
 
-    console.log(encounterData)
     //Tailwind CSS generated with help of GenAI
     return(
         <div className="min-h-screen bg slate-50 p-6">
