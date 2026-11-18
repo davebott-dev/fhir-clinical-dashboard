@@ -11,6 +11,9 @@ import SearchResults from './routes/searchResults.jsx';
 import PatientLayout from './routes/patientLayout.jsx';
 import CreatePatient from './routes/createPatient.jsx';
 import PatientFiles from './routes/patientFiles.jsx';
+import EncounterDetail from './routes/encounterDetail.jsx';
+import MedicationDetail from './routes/medicationDetail.jsx';
+import ObservationDetail from './routes/observationDetail.jsx';
 
 import Index from './routes/index.jsx';
 import './index.css';
@@ -59,6 +62,18 @@ const router = createBrowserRouter([
       {
         path: 'files/:patientId',
         element: <PatientFiles />
+      },
+      {
+        path: 'detail/:observationId',
+        element: <ObservationDetail/>
+      },
+       {
+        path: 'detail/:medicationId',
+        element: <MedicationDetail/>
+      },
+       {
+        path: 'detail/:encounterId',
+        element: <EncounterDetail/>
       }
         ]
       }
