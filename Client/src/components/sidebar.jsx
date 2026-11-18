@@ -1,8 +1,10 @@
 import { NavLink, useMatch} from 'react-router-dom';
 
 function Sidebar() {
-  const patientOverviewMatch = useMatch("/patient/:route/:patientId");
-  const patientId= patientOverviewMatch?.params?.patientId; // Extract the patientId from the URL parameters using useMatch
+  const patientOverviewMatch = useMatch("/patient/:patientId/:route");
+  const patientDetailMatch = useMatch("/patient/:patientId/:route/:detailId");
+  const patientId= patientOverviewMatch?.params?.patientId ||
+  patientDetailMatch?.params.patientId; // Extract the patientId from the URL parameters using useMatch
 
 
 
@@ -58,9 +60,9 @@ function Sidebar() {
           <span>Create Patient</span>
         </NavLink>
         
-        {patientOverviewMatch && (
+        {(patientOverviewMatch || patientDetailMatch) && (
           <>
-          <NavLink to={`/patient/overview/${patientId}`} 
+          <NavLink to={`/patient/${patientId}/overview`} 
             className={({ isActive }) =>
   `flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors ${
     isActive
@@ -74,7 +76,7 @@ function Sidebar() {
           </NavLink>
         
 
-        <NavLink to={`/patient/observations/${patientId}`} 
+        <NavLink to={`/patient/${patientId}/observations`} 
           className={({ isActive }) =>
   `flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors ${
     isActive
@@ -87,7 +89,7 @@ function Sidebar() {
           <span>Observation List</span>
         </NavLink>
 
-        <NavLink to={`/patient/medication-list/${patientId}`} 
+        <NavLink to={`/patient/${patientId}/medication-list`} 
           className={({ isActive }) =>
   `flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors ${
     isActive
@@ -100,7 +102,7 @@ function Sidebar() {
           <span>Medication List</span>
         </NavLink>
 
-        <NavLink to={`/patient/encounter-history/${patientId}`} 
+        <NavLink to={`/patient/${patientId}/encounter-history`} 
           className={({ isActive }) =>
   `flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors ${
     isActive
@@ -113,7 +115,7 @@ function Sidebar() {
           <span>Encounter History</span>
         </NavLink>
 
-        <NavLink to={`/patient/files/${patientId}`}
+        <NavLink to={`/patient/${patientId}/files`}
           className={({ isActive }) =>
   `flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors ${
     isActive

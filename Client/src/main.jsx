@@ -44,23 +44,23 @@ const router = createBrowserRouter([
         element: <PatientLayout />,
         children: [
           {
-        path: 'overview/:patientId',
+        path: ':patientId/overview',
         element: <PatientOverview />
       },
       {
-        path: 'observations/:patientId',
+        path: ':patientId/observations',
         element: <ObservationList />
       },
       {
-        path: 'medication-list/:patientId',
+        path: ':patientId/medication-list',
         element: <MedicationList />
       },
       {
-        path: 'encounter-history/:patientId',
+        path: ':patientId/encounter-history',
         element: <EncounterHistory />
       },
       {
-        path: 'files/:patientId',
+        path: ':patientId/files',
         element: <PatientFiles />
       },
       {
