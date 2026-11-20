@@ -4,6 +4,8 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import { DataGrid } from '@mui/x-data-grid';
 import CircularProgress from '@mui/material/CircularProgress';
+import TextField from '@mui/material/TextField';
+import Autocomplete from '@mui/material/Autocomplete';
 
 function EncounterModal({open, handleClose, patientId, onEncounterCreated}) {
     const [serviceProvider, setServiceProvider] = useState('');
@@ -20,6 +22,9 @@ function EncounterModal({open, handleClose, patientId, onEncounterCreated}) {
     const [serviceProviderState, setServiceProviderState] = useState('');
     const [hospitalData, setHosptialData] = useState([]);
     const [hospitalRows, setHospitalRows] = useState([]);
+    const [diagnosisSearch, setDiagnosisSearch] = useState('');
+    const [selectedDiagnosis, setSelectedDiagnosis] = useState(null);
+    const [options, setOptions] = useState([]);
 
     const usStates = [
   { name: "Alabama", abbreviation: "AL" },
@@ -91,6 +96,7 @@ const columns = [
 ];
 const apiKey = import.meta.env.VITE_API_KEY;
 
+// fetch hospital names
     useEffect(()=> {
         setLoadHospitals(true);
 
@@ -154,13 +160,153 @@ const apiKey = import.meta.env.VITE_API_KEY;
         }
             fetchData();
     }, [serviceProviderCity,serviceProviderState]);
-        
-    const createEncounter = async (e) => {
-        e.preventDefault(); //prevent default form submission;
-        setLoading(true);
 
-        try{
-            const response = await fetch('https://hapi.fhir.org/baseR4/Encounter', {
+        //fetch different types of diagnoses for autocomplete component
+    useEffect(()=> {
+        if(!diagnosisSearch.trim()) {
+            setOptions([]);
+            return;
+        }
+
+        const fetchData = async()=>{
+            try{
+                const response = await fetch(`https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?sf=code,name&terms=${diagnosisSearch}`)
+                if(!response.ok){
+                    throw new Error(
+                        'error fetching diagnosis names'
+                    )
+                }
+                const data = await response.json();
+                console.log(data?.[3])
+
+                const formattedData = data?.[3].map((el,index)=>({
+                    id: index,
+                    code:el[0],
+                    label: el[1]
+                }));
+                setOptions(formattedData);
+            }catch(error){
+                console.error('error fetching medicines',error);
+            }
+        }
+        fetchData();
+    },[diagnosisSearch]);
+
+
+    // create condition resource first
+    const createCondition = async (diagnosisItem) => {
+
+    // Search for an existing Condition for this patient and diagnosis
+    const searchResponse = await fetch(
+        `https://hapi.fhir.org/baseR4/Condition?code=${diagnosisItem.code}&patient=${patientId}`,
+        {
+            headers: {
+                Accept: 'application/fhir+json'
+            }
+        }
+    );
+
+    if (!searchResponse.ok) {
+        throw new Error('Failed to search existing Conditions');
+    }
+
+    const searchData = await searchResponse.json();
+    console.log(searchData)
+
+    // Reuse an existing Condition if found
+    if (searchData.entry?.length > 0) {
+        return searchData.entry[0].resource;
+    }
+
+    // otherwise post
+    const response = await fetch(
+        'https://hapi.fhir.org/baseR4/Condition',
+        {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/fhir+json',
+                'Accept': 'application/fhir+json'
+            },
+            body: JSON.stringify({
+                resourceType: 'Condition',
+                clinicalStatus: {
+                    coding: [{
+                        system: 'http://terminology.hl7.org/CodeSystem/condition-clinical',
+                        code: 'active',
+                        display: 'Active'
+                    }]
+                },
+                code: {
+                    coding: [{
+                        system: 'http://hl7.org/fhir/sid/icd-10-cm',
+                        code: diagnosisItem.code,
+                        display: diagnosisItem.label
+                    }],
+                    text: diagnosisItem.label
+                },
+                subject: {
+                    reference: `Patient/${patientId}`
+                }
+            })
+        }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            data.issue?.[0]?.diagnostics || 'Failed to create Condition'
+        );
+    }
+
+    return data;
+};
+        
+const createEncounter = async (e) => {
+    e.preventDefault();
+    // validation rules for form
+    if (!patientId) {
+        alert('Patient ID is missing.');
+        return;
+    }
+
+    if (!status || !code || !appointmentStartTime || !appointmentEndTime) {
+        alert('Please complete the required encounter fields.');
+        return;
+    }
+
+    if (
+        new Date(appointmentEndTime) <=
+        new Date(appointmentStartTime)
+    ) {
+        alert('The encounter end time must be after the start time.');
+        return;
+    }
+
+    setLoading(true);
+
+    try {
+        // Create the selected Condition resources (MDN Web Docs)
+            let encounterDiagnosis = [];
+
+            if (selectedDiagnosis) {
+                const condition = await createCondition(selectedDiagnosis);
+
+                encounterDiagnosis = [
+                    {
+                        condition: {
+                            reference: `Condition/${condition.id}`,
+                            display: selectedDiagnosis.label
+                        },
+                        rank: 1
+                    }
+                ];
+            }
+
+        // Create the Encounter
+        const response = await fetch(
+            'https://hapi.fhir.org/baseR4/Encounter',
+            {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/fhir+json',
@@ -168,48 +314,62 @@ const apiKey = import.meta.env.VITE_API_KEY;
                 },
                 body: JSON.stringify({
                     resourceType: 'Encounter',
+
                     status: status,
+
                     class: {
-                        system: "http://terminology.hl7.org/CodeSystem/v3-ActCode",
-                        code: code, 
+                        system: 'http://terminology.hl7.org/CodeSystem/v3-ActCode',
+                        code: code,
                         display: type
                     },
-                    type: [
-                        {
-                            text: description
-                        }
-                    ],
+
+                    type: [{
+                        text: description
+                    }],
+
                     subject: {
                         reference: `Patient/${patientId}`
                     },
-                    period:{
+
+                    period: {
                         start: new Date(appointmentStartTime).toISOString(),
                         end: new Date(appointmentEndTime).toISOString()
                     },
-                    reasonCode: [
-                        {
-                            text: reasonCode
-                        }
-                    ],
-                    serviceProvider: {
-                        display: serviceProvider
-                    }
-                })
 
-            });
-            const data = await response.json();
-            console.log(data)
-            if(!response.ok) {
-                throw new Error(`Failed to create encounter request${response.statusText}`);
+                    reasonCode: reasonCode
+                        ? [{ text: reasonCode }]
+                        : [],
+
+                    serviceProvider: serviceProvider
+                        ? { display: serviceProvider }
+                        : undefined,
+
+                    diagnosis: encounterDiagnosis
+                })
             }
-            onEncounterCreated?.(data);
-            handleClose();
-        } catch(error){
-            console.error('Error creating encounter request:', error);
-        } finally{
-            setLoading(false);
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                data.issue?.[0]?.diagnostics ||
+                'Failed to create Encounter'
+            );
         }
+
+        console.log('Created Encounter:', data);
+
+        onEncounterCreated?.(data);
+        handleClose();
+
+    } catch (error) {
+        console.error('Error creating encounter:', error);
+        alert(error.message);
+    } finally {
+        setLoading(false);
     }
+};
 
     return (
         <Modal
@@ -353,7 +513,36 @@ const apiKey = import.meta.env.VITE_API_KEY;
                                     })}
                                 </select>
                             </div>
-
+                               <div className="sm:col-span-2">
+                               {/*autocomplete component used with help from MUI docs*/}
+                           <Autocomplete
+                                id="diagnosis-name"
+                                options={options}
+                                value={selectedDiagnosis}
+                                getOptionLabel={(option) =>
+                                    `${option.code} - ${option.label}`
+                                }
+                                isOptionEqualToValue={(option, value) =>
+                                    option.code === value.code
+                                }
+                                onChange={(event, newValue) => {
+                                    setSelectedDiagnosis(newValue);
+                                }}
+                                onInputChange={(event, newValue, reason) => {
+                                    if (reason === 'input') {
+                                        setDiagnosisSearch(newValue);
+                                    }
+                                }}
+                                filterSelectedOptions
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        label="Diagnosis Name"
+                                        placeholder="Search ICD-10-CM diagnoses"
+                                    />
+                                )}
+                            />
+                            </div>
                           
                         </div>
                     </div>

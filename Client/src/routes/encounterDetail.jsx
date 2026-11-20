@@ -14,6 +14,7 @@ function EncounterDetail() {
     const encounterData = location.state?.encounter || {};
     const [value, setValue] = useState('1');
 
+    console.log(encounterData)
     const handleChange = (event, newValue) => {
         setValue(newValue);
     };
@@ -166,10 +167,13 @@ function EncounterDetail() {
 
                         <div className="rounded-lg border border-slate-100 bg-slate-50 p-4">
                             <p className="font-medium text-slate-800">
-                                Essential Hypertension
+                                {encounterData.diagnosis?.[0]?.condition?.display}
                             </p>
                             <p className="mt-1 text-sm text-slate-500">
-                                ICD-10: I10
+                                rank: {encounterData.diagnosis?.[0]?.rank}
+                            </p>
+                            <p className="mt-1 text-sm text-slate-500">
+                                reference: {encounterData.diagnosis?.[0]?.condition?.reference}
                             </p>
                         </div>
                     </section>
