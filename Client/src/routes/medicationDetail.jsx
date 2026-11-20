@@ -9,6 +9,7 @@ function MedicationDetail() {
     const medicationData = location.state?.medication || {};
     const navigate = useNavigate();
 
+    console.log(medicationData)
  // tailwind CSS generated with help of GenAI
  
    return (
@@ -22,24 +23,27 @@ function MedicationDetail() {
                     className="mb-4 inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-indigo-50 hover:text-indigo-700"
                 >
                     <ArrowBackIcon fontSize="small" />
-                    Back to Medications
+                    Back to Medications Requests
                 </button>
 
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-slate-900">
-                            Medication Details
+                            Medication Request Details
                         </h1>
                         <p className="mt-1 text-sm text-slate-500">
                             Medication Request ID: {medicationData.id}
                         </p>
                     </div>
 
-                    <span className={`rounded-full px-3 py-1 text-sm font-medium 
-                        'bg-gray-100 text-gray-700'
-                    }`}>
-                        {/* {medication.status || 'Unknown'} */}
-                    </span>
+                     {medicationData.status ? <span className = {medicationData.status?.toLowerCase()==="active"? 
+                    "rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-700":
+                    medicationData.status?.toLowerCase()==="in-progress"? "rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700":
+                    medicationData.status?.toLowerCase()==="cancelled"?"rounded-full bg-red-100 px-3 py-1 text-sm font-medium text-red-700":
+                    medicationData.status?.toLowerCase()==="planned" ?"rounded-full bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-700":
+                    ""}>
+                        {medicationData.status}
+                    </span>: <span className="rounded-full bg-grey-100 px-3 py-1 text-sm font-medium text-grey-700">Unavailable</span>}
                 </div>
             </div>
 
@@ -47,19 +51,23 @@ function MedicationDetail() {
             <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
 
                 <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                    {/* <p className="text-sm text-slate-500">Medication</p>
+                    <p className="text-sm text-slate-500">Medication</p>
                     <h2 className="mt-2 text-xl font-semibold text-slate-900">
-                        {medicationData.name}
+                        {medicationData?.medicationCodeableConcept?.text}
                     </h2>
                     <p className="mt-1 text-sm text-slate-500">
-                        {medication.intent || 'Intent unavailable'}
-                    </p> */}
+                        {medicationData.intent || 'Intent unavailable'}
+                    </p>
                 </div>
 
                 <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                     <p className="text-sm text-slate-500">Date Prescribed</p>
                     <h2 className="mt-2 text-xl font-semibold text-slate-900">
-                        {/* {formatDate(medication.authoredOn)} */}
+                        {new Date(medicationData?.authoredOn).toLocaleDateString("en-us",{
+                            day:"2-digit",
+                            month:"long",
+                            year:"numeric"
+                        })}
                     </h2>
                     <p className="mt-1 text-sm text-slate-500">
                         Prescription date
@@ -69,7 +77,7 @@ function MedicationDetail() {
                 <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                     <p className="text-sm text-slate-500">Dosage Instructions</p>
                     <h2 className="mt-2 text-xl font-semibold text-slate-900">
-                        {/* {dosage?.text || 'Not specified'} */}
+                        {medicationData?.dosageInstruction?.[0]?.text || 'Not specified'}
                     </h2>
                     <p className="mt-1 text-sm text-slate-500">
                         Administration instructions
@@ -96,7 +104,7 @@ function MedicationDetail() {
                                     Medication Name
                                 </p>
                                 <p className="mt-1 text-sm font-medium text-slate-800">
-                                    {medicationData.name}
+                                     {medicationData?.medicationCodeableConcept?.text}
                                 </p>
                             </div>
 
@@ -105,7 +113,7 @@ function MedicationDetail() {
                                     Prescription Intent
                                 </p>
                                 <p className="mt-1 text-sm font-medium text-slate-800">
-                                    {/* {medication.intent || 'N/A'} */}
+                                    {medicationData.intent || 'N/A'}
                                 </p>
                             </div>
 
@@ -114,8 +122,8 @@ function MedicationDetail() {
                                     Authored Date
                                 </p>
                                 <p className="mt-1 text-sm font-medium text-slate-800">
-                                    {/* {formatDate(medication.authoredOn)} */}
-                                </p>
+                                    {new Date(medicationData?.authoredOn).toLocaleDateString()}
+                                  </p>
                             </div>
 
                             <div>
@@ -123,7 +131,7 @@ function MedicationDetail() {
                                     Priority
                                 </p>
                                 <p className="mt-1 text-sm font-medium text-slate-800">
-                                    {/* {medication.priority || 'N/A'} */}
+                                    {medicationData.priority || 'N/A'}
                                 </p>
                             </div>
                         </div>
@@ -142,7 +150,7 @@ function MedicationDetail() {
                                     Instructions
                                 </p>
                                 <p className="mt-1 text-sm font-medium text-slate-800">
-                                    {/* {dosage?.text || 'N/A'} */}
+                                    {medicationData?.dosageInstruction?.[0]?.text || 'Not specified'}
                                 </p>
                             </div>
 
@@ -151,7 +159,7 @@ function MedicationDetail() {
                                     Route
                                 </p>
                                 <p className="mt-1 text-sm font-medium text-slate-800">
-                                    {/* {dosage?.route?.coding?.[0]?.display || 'N/A'} */}
+                                    {medicationData?.route?.coding?.[0]?.display || 'N/A'}
                                 </p>
                             </div>
 
@@ -159,23 +167,23 @@ function MedicationDetail() {
                                 <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
                                     Dose
                                 </p>
-                                {/* <p className="mt-1 text-sm font-medium text-slate-800">
-                                    {dosage?.doseAndRate?.[0]?.doseQuantity
-                                        ? `${dosage.doseAndRate[0].doseQuantity.value} ${dosage.doseAndRate[0].doseQuantity.unit || ''}`
+                                <p className="mt-1 text-sm font-medium text-slate-800">
+                                    {medicationData?.doseAndRate?.[0]?.doseQuantity
+                                        ? `${medicationData.doseAndRate[0].doseQuantity.value} ${medicationData}`
                                         : 'N/A'}
-                                </p> */}
+                                </p>
                             </div>
 
                             <div>
                                 <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
                                     Frequency
                                 </p>
-                                {/* <p className="mt-1 text-sm font-medium text-slate-800">
-                                    {dosage?.timing?.code?.text ||
-                                        (dosage?.timing?.repeat?.frequency
-                                            ? `${dosage.timing.repeat.frequency} times per ${dosage.timing.repeat.period} ${dosage.timing.repeat.periodUnit}`
+                                <p className="mt-1 text-sm font-medium text-slate-800">
+                                    {medicationData?.timing?.code?.text ||
+                                        (medicationData?.timing?.repeat?.frequency
+                                            ? `${medicationData.timing.repeat.frequency} times per ${medicationData.timing.repeat.period} ${dosage.timing.repeat.periodUnit}`
                                             : 'N/A')}
-                                </p> */}
+                                </p>
                             </div>
 
                         </div>
@@ -194,9 +202,9 @@ function MedicationDetail() {
                                     Quantity
                                 </p>
                                 <p className="mt-1 text-sm font-medium text-slate-800">
-                                    {/* {medication.dispenseRequest?.quantity?.value ?? 'N/A'}
+                                    {medicationData.dispenseRequest?.quantity?.value ?? 'N/A'}
                                     {' '}
-                                    {medication.dispenseRequest?.quantity?.unit || ''} */}
+                                    {medicationData.dispenseRequest?.quantity?.unit || ''}
                                 </p>
                             </div>
 
@@ -205,7 +213,7 @@ function MedicationDetail() {
                                     Refills Allowed
                                 </p>
                                 <p className="mt-1 text-sm font-medium text-slate-800">
-                                    {/* {medication.dispenseRequest?.numberOfRepeatsAllowed ?? 'N/A'} */}
+                                    {medicationData.dispenseRequest?.numberOfRepeatsAllowed ?? 'N/A'}
                                 </p>
                             </div>
 
@@ -214,7 +222,7 @@ function MedicationDetail() {
                                     Valid From
                                 </p>
                                 <p className="mt-1 text-sm font-medium text-slate-800">
-                                    {/* {formatDate(medication.dispenseRequest?.validityPeriod?.start)} */}
+                                    {medicationData?.dispenseRequest?.validityPeriod?.start ?? 'N/A'}
                                 </p>
                             </div>
 
@@ -223,7 +231,7 @@ function MedicationDetail() {
                                     Valid Until
                                 </p>
                                 <p className="mt-1 text-sm font-medium text-slate-800">
-                                    {/* {formatDate(medication.dispenseRequest?.validityPeriod?.end)} */}
+                                    {medicationData.dispenseRequest?.validityPeriod?.end ?? "N/A"}
                                 </p>
                             </div>
 
@@ -242,11 +250,11 @@ function MedicationDetail() {
                         </h2>
 
                         <p className="text-sm font-medium text-slate-800">
-                            {/* {medication.requester?.display || 'Provider unavailable'} */}
+                            {medicationData.requester?.display || 'Provider unavailable'}
                         </p>
 
                         <p className="mt-1 text-xs text-slate-500">
-                            {/* {medication.requester?.reference || 'No provider reference'} */}
+                            {medicationData.requester?.reference || 'No provider reference'}
                         </p>
                     </section>
 
@@ -258,7 +266,7 @@ function MedicationDetail() {
 
                         <p className="text-sm text-slate-500">Patient ID</p>
                         <p className="mt-1 break-all text-sm font-medium text-slate-800">
-                            {/* {medication.subject?.reference || `Patient/${patientId}`} */}
+                            {medicationData.subject?.reference || `Patient/${patientId}`}
                         </p>
                     </section>
 
@@ -269,7 +277,7 @@ function MedicationDetail() {
                         </h2>
 
                         <p className="text-sm text-slate-700">
-                            {/* {medication.reasonCode?.[0]?.text || 'No reason documented'} */}
+                            {medicationData.reasonCode?.[0]?.text || 'No reason documented'}
                         </p>
                     </section>
 
@@ -283,21 +291,21 @@ function MedicationDetail() {
                             <div>
                                 <p className="text-slate-500">Resource Type</p>
                                 <p className="font-medium text-slate-800">
-                                    {/* {medication.resourceType} */}
+                                    {medicationData.resourceType}
                                 </p>
                             </div>
 
                             <div>
                                 <p className="text-slate-500">Last Updated</p>
                                 <p className="font-medium text-slate-800">
-                                    {/* {formatDate(medication.meta?.lastUpdated)} */}
+                                    {new Date(medicationData?.meta?.lastUpdated).toLocaleDateString()}
                                 </p>
                             </div>
 
                             <div>
                                 <p className="text-slate-500">Medication ID</p>
                                 <p className="break-all font-medium text-slate-800">
-                                    {/* {medicationId} */}
+                                    {medicationData.id}
                                 </p>
                             </div>
                         </div>
