@@ -2,7 +2,7 @@ import {useState,useEffect} from 'react';
 import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import { DataGrid } from '@mui/x-data-grid';
+import { DataGrid, useGridApiRef } from '@mui/x-data-grid'; // implementation docs at https://mui.com/x/react-data-grid/
 import CircularProgress from '@mui/material/CircularProgress';
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
@@ -11,6 +11,7 @@ function EncounterModal({open, handleClose, patientId, onEncounterCreated}) {
     const [serviceProvider, setServiceProvider] = useState('');
     const [loading, setLoading] = useState(false);
     const [loadHospitals, setLoadHospitals] = useState(false);
+    const [loadPractitioners, setLoadPractitioners] = useState(false);
     const [status, setStatus] = useState('');
     const [type, setType] = useState('');
     const [code, setCode] = useState('');
@@ -25,6 +26,10 @@ function EncounterModal({open, handleClose, patientId, onEncounterCreated}) {
     const [diagnosisSearch, setDiagnosisSearch] = useState('');
     const [selectedDiagnosis, setSelectedDiagnosis] = useState(null);
     const [options, setOptions] = useState([]);
+    const [practitioners, setPractitioners] = useState([]);
+    const [practitionerRows, setPractitionerRows] = useState([]);
+    const [selectedParticipants, setSelectedParticipants] = useState([]);
+    const apiRef = useGridApiRef();
 
     const usStates = [
   { name: "Alabama", abbreviation: "AL" },
@@ -93,6 +98,36 @@ const columns = [
     {field: 'name', headerName: 'Hospital Name', flex: 1, rowHeader:true},
     {field: 'careType', headerName: 'Care Type', width: 150, rowHeader:true},
     {field: 'city', headerName: 'City', width: 150, rowHeader:true},
+];
+
+//setting row and columns for the practitioner data grid
+const participantColumns = [
+    {
+        field: 'name',
+        headerName: 'Participant',
+        flex: 1,
+    },
+    {
+        field: 'qualification',
+        headerName: 'Qualification',
+        flex: 1,
+    },
+    {
+        field: 'role',
+        headerName: 'Participant Role',
+        type: 'singleSelect',
+        flex: 1, 
+        editable: true,
+        cellClassName: 'editable-role-cell',
+        valueOptions: [
+            { value: 'PPRF', label: 'Primary performer' },
+            { value: 'SPRF', label: 'Secondary performer' },
+            { value: 'ATND', label: 'Attender' },
+            { value: 'CON', label: 'Consultant' },
+            { value: 'PART', label: 'Participant' },
+            { value: 'REF', label: 'Referrer' }
+        ]
+    }
 ];
 const apiKey = import.meta.env.VITE_API_KEY;
 
@@ -191,6 +226,38 @@ const apiKey = import.meta.env.VITE_API_KEY;
         }
         fetchData();
     },[diagnosisSearch]);
+
+    useEffect(()=> {
+        setLoadPractitioners(true);
+        const fetchProviders = async()=>{
+            try{
+                const response = await fetch('https://hapi.fhir.org/baseR4/Practitioner');
+                if(!response.ok){
+                    throw new Error (
+                        'error fetching practitioners'
+                    )
+                }
+                const data = await response.json();
+                setPractitioners(data.entry)
+
+                 //create the data table rows
+                const formattedRows = data?.entry?.filter((item)=>item.resource?.name?.[0]?.given[0]).map((el,index)=>({
+                    id: el.resource.id ||index,
+                    name: `${el.resource?.name?.[0]?.given[0]} ${el.resource?.name?.[0]?.family}` || 'N/A',
+                    qualification: el.resource?.qualification?.[0]?.code?.coding?.[0]?.code ||'N/A'
+                    
+                }));
+                console.log(data)
+                console.log(formattedRows)
+                setPractitionerRows(formattedRows)
+            } catch(error) {
+                console.error('error fetching providers', error);
+            }finally{
+                setLoadPractitioners(false);
+            }
+        }
+        fetchProviders();
+    },[])
 
 
     // create condition resource first
@@ -344,7 +411,25 @@ const createEncounter = async (e) => {
                         ? { display: serviceProvider }
                         : undefined,
 
-                    diagnosis: encounterDiagnosis
+                    diagnosis: encounterDiagnosis,
+                    //finish updating this...particpant role column not saving?
+                    participant: {
+                        {selectedParticipants.map((participant) => {
+                            return (
+                                type: [
+                                    {
+                                        coding: [
+                                            {
+                                                system: "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+                                                code:
+                                                display:
+                                            }
+                                        ]
+                                    }
+                                ]
+                            )
+                        })}
+                    }
                 })
             }
         );
@@ -543,7 +628,73 @@ const createEncounter = async (e) => {
                                 )}
                             />
                             </div>
-                          
+                            <p className="mb-2 block text-sm font-medium text-gray-700">
+                                    Participants
+                                </p>
+                            <div className="sm:col-span-2">
+                            <Box className ="mt-6 w-full" sx={{height:300, width:'100%',mt:3}}>
+                                <DataGrid rows={practitionerRows} 
+                                apiRef={apiRef}
+                                editMode="cell"
+                                onCellClick={(params) => {
+                                    if (params.field === 'role') {
+                                        apiRef.current.startCellEditMode({
+                                            id: params.id,
+                                            field: 'role'
+                                        });
+                                    }
+                                }}
+                                columns={participantColumns} 
+                                checkboxSelection
+                                onRowSelectionModelChange={(newSelection) => {
+                                const selectedRows = practitionerRows.filter((row) =>
+                                    newSelection.ids.has(row.id)
+                                );
+
+                                setSelectedParticipants(selectedRows);
+                                    }}
+                                processRowUpdate={(updatedRow) => {
+                                setPractitionerRows((previousRows) =>
+                                    previousRows.map((row) =>
+                                        row.id === updatedRow.id ? updatedRow : row
+                                    )
+                                 );
+                                return updatedRow;
+                                  }}
+                                pageSizeOptions={[5,10,25]}
+                                initialState={{
+                                    pagination:{
+                                        paginationModel: {
+                                            pageSize:5,
+                                            page:0
+                                        }
+                                    }
+                                }}
+                                sx={{
+                                    border: '1px solid #e5e7eb',
+                                    borderRadius: '10px',
+
+                                    '& .editable-role-cell': {
+                                        backgroundColor: '#f8fafc',
+                                        color: '#4338ca',
+                                        fontWeight: 500,
+                                        cursor: 'pointer',
+                                        borderBottom: '1px dashed #a5b4fc'
+                                    },
+
+                                    '& .editable-role-cell:hover': {
+                                        backgroundColor: '#eef2ff'
+                                    },
+
+                                    '& .editable-role-cell:focus': {
+                                        outline: '2px solid #6366f1',
+                                        outlineOffset: '-2px'
+                                    }
+                                }}
+                                loading = {loadPractitioners}
+                                />
+                            </Box>
+                                </div>
                         </div>
                     </div>
                     
