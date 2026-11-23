@@ -1,7 +1,9 @@
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
 import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Autocomplete from '@mui/material/Autocomplete';
 
 function ObservationModal({open, handleClose, patientId, onObservationCreated}) {
     const [observationName, setObservationName] = useState('');
@@ -12,7 +14,29 @@ function ObservationModal({open, handleClose, patientId, onObservationCreated}) 
     const [observationUnit, setObservationUnit] = useState('');
     const [observationInterpretation, setObservationInterpretation] = useState('');
     const [observationEncounter, setObservationEncounter] = useState('');
-    
+    const [options, setOptions] = useState([]);
+    const [loincOptions, setLoincOptions] =useState([]);
+//decide how to handle auto loinc adding...should i allow user input or pull from name?
+
+     useEffect(()=> {
+            const fetchData = async()=>{
+                try{
+                    const response = await fetch(`https://clinicaltables.nlm.nih.gov/api/loinc_items/v3/search?type=question&terms=${observationName}`)
+                    if(!response.ok){
+                        throw new Error(
+                            'error fetching questions (medical tests)'
+                        )
+                    }
+                    const data = await response.json();
+                    //flatten array before setting options
+                    setOptions(data[3].flat());
+                    console.log(data[3].flat());
+                }catch(error){
+                    console.error('error fetching tests',error);
+                }
+            }
+            fetchData();
+        },[observationName]);
  
     const createObservation = async (e) => {
         e.preventDefault(); //prevent default form submission;
@@ -91,14 +115,22 @@ function ObservationModal({open, handleClose, patientId, onObservationCreated}) 
                                 >
                                     Observation Name
                                 </label>
-                                <input
-                                    id="observation-name"
-                                    type="text"
-                                    placeholder="e.g. Hemoglobin A1c"
-                                    value={observationName}
-                                    onChange={(e) => setObservationName(e.target.value)}
-                                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                                />
+                                  {/* autocomplete component used with help from MUI docs */}
+                                     <Autocomplete
+                                        id="observation-name"
+                                        freeSolo
+                                        options={options}
+                                        value={observationName}
+                                        onInputChange={(event,newValue) => setObservationName(newValue)}
+                                        className="border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                                        renderInput={(params)=>(
+                                        <TextField
+                                        {...params}
+                                         label="Observation Name"
+                                         placeholder="e.g. Blood Glucose Test"
+                                          />
+                                      )}
+                            />
                             </div>
 
                             <div>
