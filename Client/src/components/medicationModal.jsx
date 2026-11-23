@@ -9,10 +9,20 @@ function MedicationModal({open, handleClose, patientId, onMedicationCreated}) {
     const [medicationName, setMedicationName] = useState('');
     const [options,setOptions]=useState([]);
     const [loading, setLoading] = useState(false);
+    const [loadPractitioners, setLoadPractitioners] = useState(false);
     const [status, setStatus] = useState('');
     const [authoredOnDate, setAuthoredOnDate] = useState('');
     const [dosageInstructions, setDosageInstructions] = useState('');
     const [orderedBy, setOrderedBy] = useState('');
+    const [practitioners, setPractitioners] = useState([]);
+    const [priority, setPriority] =useState("");
+    const [dose,setDose]=useState('');
+    const [doseUnit,setDoseUnit]=useState('');
+    const [route,setRoute]=useState('');
+    const [validFromDate, setValidFromDate]=useState('');
+    const [validUntilDate, setValidUntilDate]=useState('');
+    const [reasonCode, setReasonCode]=useState('');
+
 
     //fetch medicine options when creating a medication request
     useEffect(()=> {
@@ -38,7 +48,30 @@ function MedicationModal({open, handleClose, patientId, onMedicationCreated}) {
             }
         }
         fetchData();
-    },[medicationName])
+    },[medicationName]);
+
+        useEffect(()=> {
+        setLoadPractitioners(true);
+        const fetchProviders = async()=>{
+            try{
+                const response = await fetch('https://hapi.fhir.org/baseR4/Practitioner');
+                if(!response.ok){
+                    throw new Error (
+                        'error fetching practitioners'
+                    )
+                }
+                const data = await response.json();
+                setPractitioners(data.entry)
+
+                console.log(data)
+            } catch(error) {
+                console.error('error fetching providers', error);
+            }finally{
+                setLoadPractitioners(false);
+            }
+        }
+        fetchProviders();
+    },[])
         
     const createMedication = async (e) => {
         e.preventDefault(); //prevent default form submission;
@@ -52,27 +85,57 @@ function MedicationModal({open, handleClose, patientId, onMedicationCreated}) {
                 },
                 body: JSON.stringify({
                     resourceType: 'MedicationRequest',
-                    status: status,
+                        status: status,
                     intent: "order",
+                    priority: priority,
                     subject: {
                         reference: `Patient/${patientId}`
                     },
-                    medicationCodeableConcept:{
+                    medicationCodeableConcept: {
                         text: medicationName
                     },
                     dosageInstruction: [
                         {
-                            text: dosageInstructions
+                            text: dosageInstructions,
+                            route: {
+                                coding:[
+                                    {
+                                        system: "https://chartr.example/synthetic-workflow",
+                                        code: route,
+                                    }
+                                ],
+                                text: route
+                            },
+                            doseAndRate: [
+                                {
+                                    doseQuantity: {
+                                        value: Number(dose),
+                                        unit: doseUnit
+                                    }
+                                }
+                            ],
                         }
                     ],
-                    authoredOn: new Date(authoredOnDate).toISOString(),                 
-                    // requester: {
-                    //     reference: `Practitioner/${orderedBy}`
-                    // }
+                    authoredOn: new Date(authoredOnDate).toISOString(),
+                    dispenseRequest: {
+                        validityPeriod: {
+                            start: validFromDate,
+                            end: validUntilDate
+                        },
+                    },
+                    reasonCode: [
+                        {
+                            text: reasonCode
+                        }
+                    ],
+                    requester: {
+                        reference: `Practitioner/${orderedBy}`
+                    }
+                })
                 })
 
-            });
             const data = await response.json();
+            
             if(!response.ok) {
                 throw new Error(`Failed to create medication request${response.statusText}`);
             }
@@ -91,27 +154,44 @@ function MedicationModal({open, handleClose, patientId, onMedicationCreated}) {
             onClose={handleClose}
             className="flex items-center justify-center p-4"
         >
-            <Box className ="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl outline-none" >
+            <Box className ="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl outline-none" >
                 <div className="p-6">
-                    <h2 id="medication-modal-title" className="text-lg font-semibold mb-4">Create Medication Request</h2>
-                    <p className="text-sm text-gray-500 mb-4">Fill in the details for the new medication.</p>
+                    <h2 id="medication-modal-title" className="text-xl font-semibold tracking-tight text-slate-900">Create Medication Request</h2>
+                    <p className="mt-1 text-sm text-slate-500">Fill in the details for the new medication request.</p>
                 </div>
       {/* Form for creating a new medication */}
 
-       <form onSubmit={createMedication} className="p-6">
+       <form onSubmit={createMedication} className="flex min-h-0 flex-1 flex-col">
 
                     {/* Medication Details */}
-                    <div className="mb-6">
-                        <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">
+                    <div className="flex-1 space-y-7 overflow-y-auto bg-slate-50/70 px-7 py-6">
+                        
+                        {/*medication details*/}
+                    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                        <div className="mb-5 flex items-center gap-3">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                                <span>✚</span>
+                            </div>
+                            <div>
+                        <h3 className="text-sm font-semibold text-slate-900">
                             Medication Details
                         </h3>
-
+                         <p className="text-xs text-slate-500">
+                                    Select the medication and enter its prescription details.
+                        </p>
+                        </div>
+                    </div>
                         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
 
                             <div className="sm:col-span-2">
+                                <label className="mb-2 block text-sm font-medium text-slate-700">
+                                    Medication Name
+                                </label>
+
                                {/*autocomplete component used with help from MUI docs*/}
                                 <Autocomplete
                                     id="medication-name"
+                                    freeSolo
                                     options={options}
                                     value={medicationName}
                                     onInputChange={(event,newValue) => setMedicationName(newValue)}
@@ -125,25 +205,41 @@ function MedicationModal({open, handleClose, patientId, onMedicationCreated}) {
                                     )}
                                 />
                             </div>
-
-                            <div>
+                            <div className="sm:col-span-2">
                                 <label
-                                    htmlFor="loinc"
+                                    htmlFor="reason-code"
                                     className="mb-2 block text-sm font-medium text-gray-700"
                                 >
-                                    Dosage Instructions
+                                    Reason for Medication
                                 </label>
-                                <textarea
-                                    id="dosage-instructions"
+                                <input
+                                    id="reason-code"
                                     type="text"
-                                    placeholder="e.g. take twice per day orally"
-                                    value={dosageInstructions}
-                                    onChange={(e) => setDosageInstructions(e.target.value)}
+                                    placeholder="e.g. patient recovering from surgery"
+                                    value={reasonCode}
+                                    onChange={(e) => setReasonCode(e.target.value)}
                                     className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                                 />
                             </div>
-
                             <div>
+                                <label
+                                    htmlFor="priority"
+                                    className="mb-2 block text-sm font-medium text-gray-700"
+                                >
+                                    Priority
+                                </label>
+                                <select
+                                    id="priority"
+                                    value={priority}
+                                    onChange={(e) => setPriority(e.target.value)}
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                                >
+                                    <option value="">Select an option</option>
+                                    <option value="routine"> Routine</option>
+                                    <option value="urgent"> Urgent</option>
+                                    </select>
+                            </div>
+                             <div>
                                 <label
                                     htmlFor="medication-date"
                                     className="mb-2 block text-sm font-medium text-gray-700"
@@ -158,14 +254,122 @@ function MedicationModal({open, handleClose, patientId, onMedicationCreated}) {
                                     className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                                 />
                             </div>
+                                <div>
+                                <label
+                                    htmlFor="dose"
+                                    className="mb-2 block text-sm font-medium text-gray-700"
+                                >
+                                    Dose
+                                </label>
+                                <input
+                                    id="dose"
+                                    type="number"
+                                    value={dose}
+                                    min="0"
+                                    step="any"
+                                    placeholder="e.g 500"
+                                    onChange={(e) => setDose(e.target.value)}
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                                />
+                            </div>
+                              <div>
+                                <input
+                                    id="dose-unit"
+                                    type="text"
+                                    placeholder= "Unit (mg)"
+                                    value={doseUnit}
+                                    onChange={(e) => setDoseUnit(e.target.value)}
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                                />
+                            </div>
+                                        <div>
+                                <label
+                                    htmlFor="route"
+                                    className="mb-2 block text-sm font-medium text-gray-700"
+                                >
+                                    Route
+                                </label>
+                                <select
+                                    id="route"
+                                    value={route}
+                                    onChange={(e) => setRoute(e.target.value)}
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                                >
+                                    <option value = "">Select a route</option>
+                                    <option value="oral"> Oral</option>
+                                    <option value="intravenous"> Intraveneous (IV)</option>
+                                    <option value="intramuscular"> Intramuscular (IM)</option>
+                                    <option value="subcutaneous"> Subcutaneous</option>
+                                    <option value="topical"> Topical</option>
+                                    <option value="inhalation"> Inhalation</option>
+                                    <option value="rectal"> Rectal</option>
+                                    <option value="sublingual"> Sublingual</option>
+                                    </select>
+                            </div>
+                            <div>
+                                <label
+                                    htmlFor="dosage-instructions"
+                                    className="mb-2 block text-sm font-medium text-gray-700"
+                                >
+                                    Dosage Instructions
+                                </label>
+                                <textarea
+                                    id="dosage-instructions"
+                                    type="text"
+                                    placeholder="e.g. take twice per day orally"
+                                    value={dosageInstructions}
+                                    onChange={(e) => setDosageInstructions(e.target.value)}
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label
+                                    htmlFor="valid-from"
+                                    className="mb-2 block text-sm font-medium text-gray-700"
+                                >
+                                    Valid From
+                                </label>
+                                <input
+                                    id="valid-from"
+                                    type="date"
+                                    value={validFromDate}
+                                    onChange={(e) => setValidFromDate(e.target.value)}
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                                />
+                            </div>
+                               <div>
+                                <label
+                                    htmlFor="valid-until"
+                                    className="mb-2 block text-sm font-medium text-gray-700"
+                                >
+                                    Valid Until
+                                </label>
+                                <input
+                                    id="valid-until"
+                                    type="date"
+                                    value={validUntilDate}
+                                    onChange={(e) => setValidUntilDate(e.target.value)}
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                                />
+                            </div>
                         </div>
-                    </div>
-
+                        </section>
+                    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                     {/* Clinical Information */}
-                    <div className="border-t border-gray-200 pt-6">
-                        <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">
+                        <div className="mb-5 flex items-center gap-3">
+                         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                                <span>✚</span>
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-semibold text-slate-900">
                             Clinical Information
                         </h3>
+                        <p className="text-xs text-slate-500">
+                                    Specify the prescription status and ordering practitioner.
+                                </p>
+                        </div>
+                        </div>
 
                         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
 
@@ -206,16 +410,31 @@ function MedicationModal({open, handleClose, patientId, onMedicationCreated}) {
                                     onChange={(e) => setOrderedBy(e.target.value)}
                                     className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                                 >
-                                    <option value="">Select an encounter</option>
-                                    <option value="encounter-1">Practitioner 1</option>
-                                    <option value="encounter-2">Practitioner 2</option>
+                                    <option value="">Select a prescriber</option>
+                                    {practitioners.filter(el=>el.resource?.name?.[0]?.given[0]).map((practitioner)=>{
+                                        const resource = practitioner?.resource;
+                                        const name = `${resource?.name?.[0]?.given[0]} ${practitioner?.resource?.name?.[0]?.family}` || "" ;
+                                        const qualification = resource?.qualification?.[0]?.code?.text
+                                        return(
+                                            <option key={resource.id} value = {resource.id}>{name} - {qualification || "N/A"}</option>
+                                        )
+                                    })}
                                 </select>
                             </div>
                         </div>
+
+                        </section>
                     </div>
 
+                    
+
                     {/* Footer */}
-                    <div className="mt-8 flex flex-col-reverse gap-3 border-t border-gray-200 pt-5 sm:flex-row sm:justify-end">
+                      <div className="flex flex-col-reverse gap-3 border-t border-slate-200 bg-white px-7 py-4 sm:flex-row sm:justify-between">
+                    <p className="self-center text-xs text-slate-400">
+                        Please verify prescription details before submitting.
+                    </p>
+
+                    <div className="flex flex-col-reverse gap-3 sm:flex-row">
                         <Button
                             onClick={handleClose}
                             variant="outlined"
@@ -234,6 +453,7 @@ function MedicationModal({open, handleClose, patientId, onMedicationCreated}) {
                         >
                             {loading ? "Creating..." : "Create Medication Request"}
                         </Button>
+                    </div>
                     </div>
                 </form>
             </Box>

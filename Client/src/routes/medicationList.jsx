@@ -26,6 +26,8 @@ function MedicationList() {
   const [open, setOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedMedication, setSelectedMedication] = useState(null);  
+  const [loadPractitioners,setLoadPractitioners]=useState(false);
+  const [practitioners,setPractitioners]=useState([]);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
   const navigate = useNavigate();
@@ -50,7 +52,34 @@ function MedicationList() {
       }
     };
     fetchData();
-  }, [patient?.id, open])
+  }, [patient?.id, open]);
+
+  useEffect(()=> {
+        setLoadPractitioners(true);
+        const fetchProviders = async()=>{
+            try{
+                const response = await fetch(`https://hapi.fhir.org/baseR4/Practitioner`);
+                if(!response.ok){
+                    throw new Error (
+                        'error fetching practitioners'
+                    )
+                }
+                const data = await response.json();
+                console.log(data.entry)
+                setPractitioners(data.entry)
+            } catch(error) {
+                console.error('error fetching providers', error);
+            }finally{
+                setLoadPractitioners(false);
+            }
+        }
+        fetchProviders();
+    },[]);
+
+  const getPractitionerName = (practitioner) => {
+    let provider = practitioners.find(el=>el?.resource?.id == practitioner.split('/')[1]);
+    return provider.resource?.name?.[0]?.given[0] + ' ' + provider.resource?.name?.[0]?.family
+  }
 
   // Filter medications based on search term
    const filteredMedications = patientMedications.filter((entry) => {
@@ -257,7 +286,7 @@ function MedicationList() {
                                         </TableCell>
 
                                         <TableCell>
-                                            {orderedBy}
+                                            {getPractitionerName(orderedBy)}
                                         </TableCell>
 
                                         <TableCell>

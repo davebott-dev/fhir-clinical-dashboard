@@ -8,8 +8,32 @@ function MedicationDetail() {
     const location = useLocation();
     const medicationData = location.state?.medication || {};
     const navigate = useNavigate();
+    const [loadPractitioner,setLoadPractitioner]=useState(false);
+    const [practitioner,setPractitioner]=useState({});
 
     console.log(medicationData)
+
+    useEffect(()=> {
+        setLoadPractitioner(true);
+        const fetchProvider = async()=>{
+            try{
+                const response = await fetch(`https://hapi.fhir.org/baseR4/${medicationData?.requester?.reference}`);
+                if(!response.ok){
+                    throw new Error (
+                        'error fetching practitioners'
+                    )
+                }
+                const data = await response.json();
+                setPractitioner(data)
+            } catch(error) {
+                console.error('error fetching providers', error);
+            }finally{
+                setLoadPractitioner(false);
+            }
+        }
+        fetchProvider();
+    },[]);
+
  // tailwind CSS generated with help of GenAI
  
    return (
@@ -41,6 +65,7 @@ function MedicationDetail() {
                     medicationData.status?.toLowerCase()==="in-progress"? "rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700":
                     medicationData.status?.toLowerCase()==="cancelled"?"rounded-full bg-red-100 px-3 py-1 text-sm font-medium text-red-700":
                     medicationData.status?.toLowerCase()==="planned" ?"rounded-full bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-700":
+                    medicationData.status?.toLowerCase()==="on-hold" ?"rounded-full bg-yellow-100 px-3 py-1 text-sm font-medium text-yellow-700":
                     ""}>
                         {medicationData.status}
                     </span>: <span className="rounded-full bg-grey-100 px-3 py-1 text-sm font-medium text-grey-700">Unavailable</span>}
@@ -159,7 +184,7 @@ function MedicationDetail() {
                                     Route
                                 </p>
                                 <p className="mt-1 text-sm font-medium text-slate-800">
-                                    {medicationData?.route?.coding?.[0]?.display || 'N/A'}
+                                    {medicationData?.dosageInstruction?.[0]?.route?.text || 'N/A'}
                                 </p>
                             </div>
 
@@ -168,24 +193,11 @@ function MedicationDetail() {
                                     Dose
                                 </p>
                                 <p className="mt-1 text-sm font-medium text-slate-800">
-                                    {medicationData?.doseAndRate?.[0]?.doseQuantity
-                                        ? `${medicationData.doseAndRate[0].doseQuantity.value} ${medicationData}`
+                                    {medicationData?.dosageInstruction?.[0]?.doseAndRate?.[0].doseQuantity
+                                        ? `${medicationData.dosageInstruction?.[0]?.doseAndRate?.[0]?.doseQuantity.value} ${medicationData.dosageInstruction?.[0]?.doseAndRate?.[0]?.doseQuantity.unit}`
                                         : 'N/A'}
                                 </p>
                             </div>
-
-                            <div>
-                                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                                    Frequency
-                                </p>
-                                <p className="mt-1 text-sm font-medium text-slate-800">
-                                    {medicationData?.timing?.code?.text ||
-                                        (medicationData?.timing?.repeat?.frequency
-                                            ? `${medicationData.timing.repeat.frequency} times per ${medicationData.timing.repeat.period} ${dosage.timing.repeat.periodUnit}`
-                                            : 'N/A')}
-                                </p>
-                            </div>
-
                         </div>
                     </section>
 
@@ -196,27 +208,6 @@ function MedicationDetail() {
                         </h2>
 
                         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-
-                            <div>
-                                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                                    Quantity
-                                </p>
-                                <p className="mt-1 text-sm font-medium text-slate-800">
-                                    {medicationData.dispenseRequest?.quantity?.value ?? 'N/A'}
-                                    {' '}
-                                    {medicationData.dispenseRequest?.quantity?.unit || ''}
-                                </p>
-                            </div>
-
-                            <div>
-                                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                                    Refills Allowed
-                                </p>
-                                <p className="mt-1 text-sm font-medium text-slate-800">
-                                    {medicationData.dispenseRequest?.numberOfRepeatsAllowed ?? 'N/A'}
-                                </p>
-                            </div>
-
                             <div>
                                 <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
                                     Valid From
@@ -250,7 +241,7 @@ function MedicationDetail() {
                         </h2>
 
                         <p className="text-sm font-medium text-slate-800">
-                            {medicationData.requester?.display || 'Provider unavailable'}
+                            {`${practitioner?.name?.[0]?.given[0]} ${practitioner?.name?.[0]?.family} - ${practitioner.qualification?.[0]?.code?.text}`}
                         </p>
 
                         <p className="mt-1 text-xs text-slate-500">

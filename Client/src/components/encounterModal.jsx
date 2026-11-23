@@ -412,24 +412,24 @@ const createEncounter = async (e) => {
                         : undefined,
 
                     diagnosis: encounterDiagnosis,
-                    //finish updating this...particpant role column not saving?
-                    participant: {
-                        {selectedParticipants.map((participant) => {
-                            return (
-                                type: [
+
+                    participant: selectedParticipants.map((participant)=>({
+                        type: [
+                            {
+                                coding:[
                                     {
-                                        coding: [
-                                            {
-                                                system: "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
-                                                code:
-                                                display:
-                                            }
-                                        ]
+                                        system: "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+                                        code:participant.role
                                     }
                                 ]
-                            )
-                        })}
-                    }
+                            }
+                        ],
+                        individual: {
+                            reference: `Practitioner/${participant.id}`,
+                            display: participant.name
+                        }
+                    }))
+                  
                 })
             }
         );
@@ -583,11 +583,11 @@ const createEncounter = async (e) => {
                                 </label>
                                 <select
                                     id="type"
-                                    value={type}
+                                    value={code}
                                     onChange={(e) => {
-                                        setCode(e.target.value);
-                                        setType(encounterClasses.find(item=> item.code ===e.target.value)?.display);
-                                    
+                                        const selectedItem = encounterClasses.find(item=>item.code === e.target.value)
+                                        setCode(selectedItem.code);
+                                        setType(selectedItem.display);                                    
                                     }}
                                     className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                                 >

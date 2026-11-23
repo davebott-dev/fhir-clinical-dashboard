@@ -13,11 +13,42 @@ function EncounterDetail() {
     const navigate = useNavigate();
     const encounterData = location.state?.encounter || {};
     const [value, setValue] = useState('1');
+    const [loading, setLoading] = useState(false);
+    const [practitioner, setPractitioner] = useState({})
 
-    console.log(encounterData)
+    console.log(encounterData);
+
     const handleChange = (event, newValue) => {
         setValue(newValue);
     };
+
+    useEffect(()=> {
+        if(!encounterData?.participant) return;
+
+        let primary_doc = encounterData?.participant?.find((el)=> {
+            return el.type?.[0]?.coding?.[0]?.code === "PPRF"
+        });
+        
+        const fetchData = async() => {
+          setLoading(true);
+      try{
+          const response = await fetch(`https://hapi.fhir.org/baseR4/${primary_doc.individual?.reference}`);
+        if(!response.ok)  {
+          throw new Error (
+            'unable to fetch provider'
+          )
+        }
+        const data = await response.json();
+        setPractitioner(data)
+        console.log(data)
+      } catch (error) {
+        console.error('Failed to fetch provider:', error);
+      } finally { 
+        setLoading(false);
+      }
+    };
+    fetchData();
+    },[]);
 
     //Tailwind CSS generated with help of GenAI
     return(
@@ -207,15 +238,19 @@ function EncounterDetail() {
 
                         <div className="flex items-center gap-3">
                             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
-                                <span className="text-lg font-semibold">JS</span>
+                                <span className="text-lg font-semibold">
+                                    {practitioner.name?.[0]?.given[0][0]+
+                                    practitioner.name?.[0]?.family[0]}
+                                </span>
                             </div>
 
                             <div>
                                 <p className="font-medium text-slate-900">
-                                    Dr. Jane Smith
+                                    {practitioner.name?.[0]?.given[0] + ' ' +
+                                    practitioner.name?.[0]?.family}
                                 </p>
                                 <p className="text-sm text-slate-500">
-                                    Practitioner
+                                    {practitioner.qualification?.[0]?.code?.text}
                                 </p>
                             </div>
                         </div>
@@ -226,10 +261,21 @@ function EncounterDetail() {
                         <h2 className="mb-4 text-lg font-semibold text-slate-900">
                             Participants
                         </h2>
-
+                        {encounterData.participant?.length>0 ? encounterData.participant?.map((el)=>{
+                            return(
+                            <p><strong>{el.individual?.display}</strong>: 
+                            {el.type?.[0]?.coding?.[0]?.code==="PPRF"?" Primary Performer":
+                            el.type?.[0]?.coding?.[0]?.code==="SPRF"? " Secondary Performer":
+                            el.type?.[0]?.coding?.[0]?.code==="ATND"? " Attender":
+                            el.type?.[0]?.coding?.[0]?.code==="CON"? " Consultant":
+                            el.type?.[0]?.coding?.[0]?.code==="PART"? " Participant":
+                            el.type?.[0]?.coding?.[0]?.code==="REF"? " Referrer": "N/A"}</p>
+                        )}): 
                         <p className="text-sm text-slate-500">
                             No additional participants available.
                         </p>
+                        }
+                        
                     </section>
 
                     {/* Resource Information */}
