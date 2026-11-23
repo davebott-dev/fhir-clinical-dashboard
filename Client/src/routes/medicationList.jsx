@@ -77,8 +77,10 @@ function MedicationList() {
     },[]);
 
   const getPractitionerName = (practitioner) => {
-    let provider = practitioners.find(el=>el?.resource?.id == practitioner.split('/')[1]);
-    return provider.resource?.name?.[0]?.given[0] + ' ' + provider.resource?.name?.[0]?.family
+    const provider = practitioners.find(el=>el?.resource?.id === practitioner.split('/')[1]);
+    if(!provider) return 'Practitioner name not found'
+    const name = provider.resource?.name?.[0]?.given[0] + ' ' + provider.resource?.name?.[0]?.family
+    return name || "Name Unavailable";
   }
 
   // Filter medications based on search term
