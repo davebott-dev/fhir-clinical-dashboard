@@ -1,5 +1,5 @@
 import {useState, useEffect} from 'react';
-import {useOutletContext, NavLink} from 'react-router-dom';
+import {useOutletContext, useNavigate} from 'react-router-dom';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -28,6 +28,7 @@ function ObservationList() {
   const [selectedObservation, setSelectedObservation] = useState(null);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
+  const navigate = useNavigate();
 
   // Sort observations by date in descending order
   const sortedObservations= [...patientObservations].sort((a,b) => {
@@ -241,11 +242,13 @@ function ObservationList() {
 
                                 return (
                                     <TableRow key={observation.id}>
-                                      <TableCell>
-                                        <NavLink to={`/patient/${patient.id}/observation-detail/${observation.id}`}>
-                                        {observation.id}
-                                        </NavLink>
-                                      </TableCell>
+                                      <TableCell
+                                          onClick= {(e)=>navigate(`/patient/${patient.id}/observation-detail/${observation.id}`,
+                                           {state:{observation: observation}})}
+                                             className="cursor-pointer text-blue-600 hover:underline"
+                                          >
+                                         {observation.id}
+                                          </TableCell>
                                         <TableCell>
                                             {observationName}
                                         </TableCell>

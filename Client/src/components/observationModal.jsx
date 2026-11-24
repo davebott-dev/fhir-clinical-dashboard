@@ -22,7 +22,10 @@ function ObservationModal({open, handleClose, patientId, onObservationCreated}) 
     const [referenceRangeHigh, setReferenceRangeHigh] = useState('');
     const [referenceRangeUnit, setReferenceRangeUnit] = useState('');
     const [encounterOptions, setEncounterOptions] = useState([]);
-
+    const [performer, setPerformer] = useState({});
+    const [loadPractitioners, setLoadPractitioners] = useState(false);
+    const [practitioners, setPractitioners] = useState([]);
+    console.log(performer)
      useEffect(()=> {
             const fetchData = async()=>{
                 try{
@@ -63,6 +66,29 @@ function ObservationModal({open, handleClose, patientId, onObservationCreated}) 
             }
             fetchEncounters();
         },[patientId]);
+    
+        useEffect(()=> {
+        setLoadPractitioners(true);
+        const fetchProviders = async()=>{
+            try{
+                const response = await fetch('https://hapi.fhir.org/baseR4/Practitioner');
+                if(!response.ok){
+                    throw new Error (
+                        'error fetching practitioners'
+                    )
+                }
+                const data = await response.json();
+                setPractitioners(data.entry)
+
+                console.log(data)
+            } catch(error) {
+                console.error('error fetching providers', error);
+            }finally{
+                setLoadPractitioners(false);
+            }
+        }
+        fetchProviders();
+    },[])
  
     const createObservation = async (e) => {
         e.preventDefault(); //prevent default form submission;
@@ -128,6 +154,25 @@ function ObservationModal({open, handleClose, patientId, onObservationCreated}) 
                             }
                         })
                     }
+                    ]
+                }),
+                category: [
+                    {
+                        coding: [
+                            {
+                                system: "http://terminology.hl7.org/CodeSystem/observation-category",
+                                code: {category},
+                                display: {category}
+                            }
+                        ]
+                    }
+                ],
+                ...(performer && {
+                    performer: [
+                        {
+                            reference: `Practitioner/${performer.id}`,
+                            display: performer.name
+                        }
                     ]
                 })
             })
@@ -434,6 +479,37 @@ function ObservationModal({open, handleClose, patientId, onObservationCreated}) 
                                     onChange={(e) => setReferenceRangeUnit(e.target.value)}
                                     className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 shadow-sm outline-none transition placeholder:text-gray-400 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
                                 />
+                            </div>
+                            <div>
+                               <label
+                                    htmlFor="status"
+                                    className="mb-1.5 block text-sm font-medium text-gray-700"
+
+                                >
+                                      Performer
+                                </label> 
+                                   <select
+                                    id="performer"
+                                    value={performer.id}
+                                    onChange={(e) => setPerformer(
+                                        {
+                                            id: e.target.value,
+                                            name: `${practitioners.find(el=>el.resource.id===performer.id).resource?.name?.[0].given[0]} ${practitioners.find(el=>el.resource.id===performer.id).resource?.name?.[0].family}`
+
+                                        })
+                                    }
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                                >
+                                    <option value="">Select a Practitioner</option>
+                                    {practitioners.filter(el=>el.resource?.name?.[0]?.given[0]).map((practitioner)=> {
+                                        const resource = practitioner.resource;
+                                        return(
+                                            <option value = {resource.id} key={resource.id}>
+                                                {resource.name?.[0].given[0]} {resource.name?.[0].family} - {resource.qualification?.[0]?.code?.text || 'role unavailable'}
+                                            </option>
+                                        )
+                                    })}
+                                </select>
                             </div>
                         </div>
                     </div>
