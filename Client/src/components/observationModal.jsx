@@ -16,7 +16,12 @@ function ObservationModal({open, handleClose, patientId, onObservationCreated}) 
     const [observationEncounter, setObservationEncounter] = useState('');
     const [options, setOptions] = useState([]);
     const [loincOptions, setLoincOptions] =useState([]);
-//decide how to handle auto loinc adding...should i allow user input or pull from name?
+    const [category, setCategory] = useState("");
+    const [status, setStatus] = useState("");
+    const [referenceRangeLow, setReferenceRangeLow] = useState('');
+    const [referenceRangeHigh, setReferenceRangeHigh] = useState('');
+    const [referenceRangeUnit, setReferenceRangeUnit] = useState('');
+    const [encounterOptions, setEncounterOptions] = useState([]);
 
      useEffect(()=> {
             const fetchData = async()=>{
@@ -30,6 +35,8 @@ function ObservationModal({open, handleClose, patientId, onObservationCreated}) 
                     const data = await response.json();
                     //flatten array before setting options
                     setOptions(data[3].flat());
+                    setLoincOptions(data[1].flat());
+                    console.log(data[1].flat())
                     console.log(data[3].flat());
                 }catch(error){
                     console.error('error fetching tests',error);
@@ -37,6 +44,25 @@ function ObservationModal({open, handleClose, patientId, onObservationCreated}) 
             }
             fetchData();
         },[observationName]);
+
+    useEffect(()=> {
+            const fetchEncounters = async()=>{
+                try{
+                    const response = await fetch(`https://hapi.fhir.org/baseR4/Encounter?subject=${patientId}`)
+                    if(!response.ok){
+                        throw new Error(
+                            'error fetching encounters'
+                        )
+                    }
+                    const data = await response.json();
+                    setEncounterOptions(data?.entry)
+                    console.log(data.entry);
+                }catch(error){
+                    console.error('error fetching tests',error);
+                }
+            }
+            fetchEncounters();
+        },[patientId]);
  
     const createObservation = async (e) => {
         e.preventDefault(); //prevent default form submission;
@@ -68,9 +94,44 @@ function ObservationModal({open, handleClose, patientId, onObservationCreated}) 
                     valueQuantity: {
                         value: observationValue,
                         unit: observationUnit
+                    },
+                    ...(observationEncounter && { 
+                        encounter: {
+                        reference: `Encounter/${observationEncounter}`
+                        }
+                    }),
+                    ...(observationInterpretation && {
+                        interpretation: [
+                        {
+                            coding: [
+                                {
+                                    system: "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+                                    code: observationInterpretation
+                                }
+                            ]
+                        }
+                    ]
+                }),
+                    ...((referenceRangeLow !=="" || referenceRangeHigh !=="") &&
+                    {referenceRange: [
+                        {
+                            ...(referenceRangeLow !=="" && {
+                                low: {
+                                value: Number(referenceRangeLow),
+                                unit: referenceRangeUnit
+                            }
+                        }),
+                            ...(referenceRangeHigh !== "" && {
+                                high: {
+                                value:Number(referenceRangeHigh),
+                                unit:referenceRangeUnit
+                            }
+                        })
                     }
+                    ]
                 })
-            });
+            })
+        })
             const data = await response.json();
             if(!response.ok) {
                 throw new Error(`Failed to create observation: ${response.statusText}`);
@@ -81,28 +142,32 @@ function ObservationModal({open, handleClose, patientId, onObservationCreated}) 
             console.error('Error creating observation:', error);
         } finally {
             handleClose();
-
         }
     }
 
+    // tailwind css generated with help of GenAI
     return (
         <Modal
             open={open}
             onClose={handleClose}
             className="flex items-center justify-center p-4"
         >
-            <Box className ="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl outline-none" >
-                <div className="p-6">
-                    <h2 id="observation-modal-title" className="text-lg font-semibold mb-4">Create Observation</h2>
-                    <p className="text-sm text-gray-500 mb-4">Fill in the details for the new observation.</p>
+            <Box className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl outline-none">
+            <div className="border-b border-gray-200 px-7 py-5">
+                    <h2 id="observation-modal-title" className="text-xl font-semibold tracking-tight text-gray-900">
+                        Create Observation
+                    </h2>
+                    <p className="mt-1 text-sm text-gray-500">
+                         Fill in the details for the new observation.
+                    </p>
                 </div>
       {/* Form for creating a new observation */}
 
-       <form onSubmit={createObservation} className="p-6">
+       <form onSubmit={createObservation} className="space-y-7 p-7">
 
                     {/* Observation Details */}
                     <div className="mb-6">
-                        <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">
+                        <h3 className="mb-5 text-sm font-semibold uppercase tracking-wider text-gray-500">
                             Observation Details
                         </h3>
 
@@ -111,7 +176,7 @@ function ObservationModal({open, handleClose, patientId, onObservationCreated}) 
                             <div className="sm:col-span-2">
                                 <label
                                     htmlFor="observation-name"
-                                    className="mb-2 block text-sm font-medium text-gray-700"
+                                    className="mb-1.5 block text-sm font-medium text-gray-700"
                                 >
                                     Observation Name
                                 </label>
@@ -122,12 +187,30 @@ function ObservationModal({open, handleClose, patientId, onObservationCreated}) 
                                         options={options}
                                         value={observationName}
                                         onInputChange={(event,newValue) => setObservationName(newValue)}
+                                        onChange={(event,newValue)=>setLoinc(loincOptions[0])}
                                         className="border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                                         renderInput={(params)=>(
                                         <TextField
                                         {...params}
                                          label="Observation Name"
                                          placeholder="e.g. Blood Glucose Test"
+                                           sx={{
+                                            "& .MuiOutlinedInput-root": {
+                                                borderRadius: "8px",
+                                                fontSize: "14px",
+                                                backgroundColor: "white",
+                                                "& fieldset": {
+                                                    borderColor: "#d1d5db",
+                                                },
+                                                "&:hover fieldset": {
+                                                    borderColor: "#9ca3af",
+                                                },
+                                                "&.Mui-focused fieldset": {
+                                                    borderColor: "#3b82f6",
+                                                    borderWidth: "1px",
+                                                },
+                                            },
+                                        }}
                                           />
                                       )}
                             />
@@ -136,24 +219,24 @@ function ObservationModal({open, handleClose, patientId, onObservationCreated}) 
                             <div>
                                 <label
                                     htmlFor="loinc"
-                                    className="mb-2 block text-sm font-medium text-gray-700"
+                                    className="mb-1.5 block text-sm font-medium text-gray-700"
                                 >
                                     LOINC Code
                                 </label>
                                 <input
                                     id="loinc"
                                     type="text"
+                                    disabled
                                     placeholder="e.g. 4548-4"
                                     value={loinc}
-                                    onChange={(e) => setLoinc(e.target.value)}
-                                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 shadow-sm outline-none transition placeholder:text-gray-400 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
                                 />
                             </div>
 
                             <div>
                                 <label
                                     htmlFor="observation-date"
-                                    className="mb-2 block text-sm font-medium text-gray-700"
+                                    className="mb-1.5 block text-sm font-medium text-gray-700"
                                 >
                                     Observation Date
                                 </label>
@@ -162,14 +245,14 @@ function ObservationModal({open, handleClose, patientId, onObservationCreated}) 
                                     type="date"
                                     value={observationDate}
                                     onChange={(e) => setObservationDate(e.target.value)}
-                                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 shadow-sm outline-none transition placeholder:text-gray-400 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
                                 />
                             </div>
 
                             <div>
                                 <label
                                     htmlFor="observation-value"
-                                    className="mb-2 block text-sm font-medium text-gray-700"
+                                    className="mb-1.5 block text-sm font-medium text-gray-700"
                                 >
                                     Observation Value
                                 </label>
@@ -180,14 +263,14 @@ function ObservationModal({open, handleClose, patientId, onObservationCreated}) 
                                     placeholder="Enter value"
                                     value={observationValue}
                                     onChange={(e) => setObservationValue(e.target.value)}
-                                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 shadow-sm outline-none transition placeholder:text-gray-400 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
                                 />
                             </div>
 
                             <div>
                                 <label
                                     htmlFor="observation-unit"
-                                    className="mb-2 block text-sm font-medium text-gray-700"
+                                    className="mb-1.5 block text-sm font-medium text-gray-700"
                                 >
                                     Observation Unit
                                 </label>
@@ -197,15 +280,15 @@ function ObservationModal({open, handleClose, patientId, onObservationCreated}) 
                                     placeholder="e.g. mg/dL"
                                     value={observationUnit}
                                     onChange={(e) => setObservationUnit(e.target.value)}
-                                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 placeholder-gray-400 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 shadow-sm outline-none transition placeholder:text-gray-400 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
                                 />
                             </div>
                         </div>
                     </div>
 
                     {/* Clinical Information */}
-                    <div className="border-t border-gray-200 pt-6">
-                        <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500">
+                    <div className="border-t border-gray-200 pt-7">
+                        <h3 className="mb-5 text-sm font-semibold uppercase tracking-wider text-gray-500">
                             Clinical Information
                         </h3>
 
@@ -214,7 +297,7 @@ function ObservationModal({open, handleClose, patientId, onObservationCreated}) 
                             <div>
                                 <label
                                     htmlFor="interpretation"
-                                    className="mb-2 block text-sm font-medium text-gray-700"
+                                    className="mb-1.5 block text-sm font-medium text-gray-700"
                                 >
                                     Interpretation
                                 </label>
@@ -237,7 +320,7 @@ function ObservationModal({open, handleClose, patientId, onObservationCreated}) 
                             <div>
                                 <label
                                     htmlFor="encounter"
-                                    className="mb-2 block text-sm font-medium text-gray-700"
+                                    className="mb-1.5 block text-sm font-medium text-gray-700"
                                 >
                                     Encounter
                                 </label>
@@ -248,9 +331,109 @@ function ObservationModal({open, handleClose, patientId, onObservationCreated}) 
                                     className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                                 >
                                     <option value="">Select an encounter</option>
-                                    <option value="encounter-1">Encounter 1</option>
-                                    <option value="encounter-2">Encounter 2</option>
+                                      {encounterOptions?.map((encounter)=> {
+                                        const resource = encounter?.resource;
+                                        return(
+                                            <option key={resource?.id} value={resource?.id} >
+                                                {resource?.serviceProvider?.display || "Service Provider name unavailable"} - {new Date(resource?.period?.start).toLocaleDateString()}
+                                            </option>
+                                        )
+                                      })}
                                 </select>
+                            </div>
+                            <div>
+                               <label
+                                    htmlFor="category"
+                                    className="mb-1.5 block text-sm font-medium text-gray-700"
+
+                                >
+                                      Category
+                                </label> 
+                                   <select
+                                    id="category"
+                                    value={category}
+                                    onChange={(e) => setCategory(e.target.value)}
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                                >
+                                    <option value="">Select a Category</option>
+                                    <option value="laboratory">Laboratory</option>
+                                    <option value="vital-signs">Vital-Signs</option>
+                                    <option value="exam">Exam</option>
+                                    <option value="social-history">Social-History</option>
+                                </select>
+                            </div>
+                            <div>
+                               <label
+                                    htmlFor="status"
+                                    className="mb-1.5 block text-sm font-medium text-gray-700"
+
+                                >
+                                      Status
+                                </label> 
+                                   <select
+                                    id="status"
+                                    value={status}
+                                    onChange={(e) => setStatus(e.target.value)}
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                                >
+                                    <option value="">Select a Status</option>
+                                    <option value="registered">Registered</option>
+                                    <option value="preliminary">Preliminary</option>
+                                    <option value="final">Final</option>
+                                    <option value="amended">Amended</option>
+                                    <option value="canceled">Canceled</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label
+                                    htmlFor="reference-range-low"
+                                    className="mb-1.5 block text-sm font-medium text-gray-700"
+                                >
+                                    Low Reference Range
+                                </label>
+                                <input
+                                    id="reference-range-low"
+                                    type="number"
+                                    step="any"
+                                    placeholder="Enter value"
+                                    value={referenceRangeLow}
+                                    onChange={(e) => setReferenceRangeLow(e.target.value)}
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 shadow-sm outline-none transition placeholder:text-gray-400 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
+                                />
+                            </div>
+                            <div>
+                                <label
+                                    htmlFor="reference-range-high"
+                                    className="mb-1.5 block text-sm font-medium text-gray-700"
+                                >
+                                    High Reference Range
+                                </label>
+                                <input
+                                    id="reference-range-high"
+                                    type="number"
+                                    step="any"
+                                    placeholder="Enter value"
+                                    value={referenceRangeHigh}
+                                    onChange={(e) => setReferenceRangeHigh(e.target.value)}
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 shadow-sm outline-none transition placeholder:text-gray-400 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
+                                />
+                            </div>
+                            <div>
+                                <label
+                                    htmlFor="reference-range-unit"
+                                    className="mb-1.5 block text-sm font-medium text-gray-700"
+                                >
+                                    Reference Range Units
+                                </label>
+                                <input
+                                    id="reference-range-unit"
+                                    type="text"
+                                    step="any"
+                                    placeholder="e.g. mg/dL"
+                                    value={referenceRangeUnit}
+                                    onChange={(e) => setReferenceRangeUnit(e.target.value)}
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 shadow-sm outline-none transition placeholder:text-gray-400 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
+                                />
                             </div>
                         </div>
                     </div>
