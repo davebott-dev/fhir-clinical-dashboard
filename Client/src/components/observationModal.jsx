@@ -80,7 +80,7 @@ function ObservationModal({open, handleClose, patientId, onObservationCreated}) 
                 const data = await response.json();
                 setPractitioners(data.entry)
 
-                console.log(data)
+                console.log('providers', data.entry)
             } catch(error) {
                 console.error('error fetching providers', error);
             }finally{
@@ -491,13 +491,16 @@ function ObservationModal({open, handleClose, patientId, onObservationCreated}) 
                                    <select
                                     id="performer"
                                     value={performer.id}
-                                    onChange={(e) => setPerformer(
-                                        {
-                                            id: e.target.value,
-                                            name: `${practitioners.find(el=>el.resource.id===performer.id).resource?.name?.[0].given[0]} ${practitioners.find(el=>el.resource.id===performer.id).resource?.name?.[0].family}`
+                                    onChange={(e)=> {
+                                        const selectedPractitioner = practitioners.find(el =>el.resource?.id===e.target.value)?.resource;
 
+                                        setPerformer({
+                                            id: e.target.value,
+                                            name: selectedPractitioner ?
+                                            `${selectedPractitioner.name?.[0]?.given?.join(" ") || ""} ${selectedPractitioner.name?.[0]?.family || ""}`.trim()
+                                                 : ""
                                         })
-                                    }
+                                    }}
                                     className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                                 >
                                     <option value="">Select a Practitioner</option>

@@ -99,7 +99,7 @@ function ObservationList() {
 
   //update table immediately before backend
   const handleCreatedObservation = (newobservation) => {
-      setPatientObservation(curr=> [
+      setPatientObservations(curr=> [
         {resource: newobservation},
         ...curr //spread syntax to copy current content
       ]);
