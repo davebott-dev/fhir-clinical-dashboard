@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
 import { Chart, Title, YAxis } from '@highcharts/react';
 import { GaugeSeries } from '@highcharts/react/series/Gauge';
@@ -8,10 +8,34 @@ import NotesModal from '../components/notesModal.jsx';
 
 function PatientOverview() {
   const { patientId } = useParams();
-  const [patient, loading, patientObservations] = useOutletContext();
+  const [patient] = useOutletContext();
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [patientObservations, setPatientObservations] =useState([]);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
+
+  console.log(patient)
+
+  useEffect(() => {
+        const fetchData = async () => {
+        if(!patient?.id) return;
+          setLoading(true);
+        try{
+          const response = await fetch(`https://hapi.fhir.org/baseR4/Observation?patient=${patient?.id}`);
+          if(!response.ok) {
+            throw new Error(`Failed to fetch patient observations: ${response.statusText}`);
+          }
+          const data = await response.json();
+          setPatientObservations(data.entry ?? []);
+      } catch(error){
+        console.error('Error fetching patient observations:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+      fetchData();
+  }, [patient?.id]);
 
   // storing data in varaibles for easier access 
 
