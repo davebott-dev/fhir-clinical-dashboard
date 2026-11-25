@@ -19,11 +19,19 @@ function ObservationDetail() {
     const [loadEncounter, setLoadEncounter] =useState(false);
     console.log(observationData)
 
+    const statusColors = {
+        final: 'bg-green-100 text-green-700',
+        preliminary: 'bg-yellow-100 text-yellow-700',
+        registered: 'bg-blue-100 text-blue-700',
+        amended: 'bg-purple-100 text-purple-700',
+        cancelled: 'bg-red-100 text-red-700'
+    };
+
         useEffect(()=> {
         setLoadPractitioner(true);
         const fetchProvider = async()=>{
             try{
-                const response = await fetch(`https://hapi.fhir.org/baseR4/Practitioner/${observationData.id}`);
+                const response = await fetch(`https://hapi.fhir.org/baseR4/${observationData.performer?.[0]?.reference}`);
                 if(!response.ok){
                     throw new Error (
                         'error fetching provider'
@@ -31,7 +39,7 @@ function ObservationDetail() {
                 }
                 const data = await response.json();
                 setPractitioner(data)
-                console.log(data)
+                console.log('performer',data)
             } catch(error) {
                 console.error('error fetching provider', error);
             }finally{
@@ -85,7 +93,7 @@ function ObservationDetail() {
             }
         }
         fetchPatient();
-    },[])
+    },[]);
 
 // tailwind css generated with help from genAI
 return (
@@ -123,18 +131,17 @@ return (
 
                         <div className="mt-3 flex flex-wrap gap-2">
                             <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
-                                Laboratory
-                            </span>
-                            <span className="rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700">
-                                Chemistry
+                                {observationData.category?.[0]?.coding?.[0]?.display}
                             </span>
                         </div>
                     </div>
                 </div>
 
-                <span className="w-fit rounded-full bg-green-100 px-3 py-1.5 text-xs font-semibold text-green-700">
-                    {observationData.status}
-                </span>
+                 <span className={`w-fit rounded-full px-3 py-1.5 text-xs font-semibold capitalize ${
+                        statusColors[observationData.status] || 'bg-slate-100 text-slate-700'
+                    }`}>
+                        {observationData.status || 'Unknown'}
+                    </span>
             </div>
         </div>
 
@@ -151,19 +158,35 @@ return (
                     <h2 className="text-4xl font-bold text-slate-900">
                         {observationData.valueQuantity?.value}
                     </h2>
-                    <span className="text-lg text-slate-500">{observationData.valueQuantity?.unit}</span>
+                    <span className="text-lg text-slate-500">{observationData.valueQuantity?.unit ? observationData.valueQuantity?.unit : "Unit Not Specified"}</span>
                 </div>
 
+                {observationData.interpretation?.[0]?.coding?.[0]?.code === "N" ? 
                 <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700">
-                    <span className="h-2 w-2 rounded-full bg-green-500"></span>
-                    {observationData.interpretation?.[0]?.coding?.[0]?.code === "N" ? "Normal":
-                    observationData.interpretation?.[0]?.coding?.[0]?.code === "L" ? "Low" :
-                    observationData.interpretation?.[0]?.coding?.[0]?.code === "H" ? "High" :
-                    observationData.interpretation?.[0]?.coding?.[0]?.code === "LL" ? "Critical Low" :
-                    observationData.interpretation?.[0]?.coding?.[0]?.code === "HH" ? "Critical High" :
-                    observationData.interpretation?.[0]?.coding?.[0]?.code === "A" ? "Abnormal" : "N/A"
-                    }
-                </div>
+                        <span className="h-2 w-2 rounded-full bg-green-500"></span>
+                        Normal
+                     </div> : observationData.interpretation?.[0]?.coding?.[0]?.code === "L" ?
+                        <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-yellow-50 px-3 py-1.5 text-xs font-semibold text-yellow-700">
+                        <span className="h-2 w-2 rounded-full bg-yellow-500"></span>
+                            Low
+                            </div> :observationData.interpretation?.[0]?.coding?.[0]?.code === "H" ?
+                                            <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-yellow-50 px-3 py-1.5 text-xs font-semibold text-yellow-700">
+                        <span className="h-2 w-2 rounded-full bg-yellow-500"></span>
+                            High
+                            </div> : observationData.interpretation?.[0]?.coding?.[0]?.code === "LL" ?
+                                            <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700">
+                        <span className="h-2 w-2 rounded-full bg-red-500"></span>
+                        Critical Low
+                        </div> : observationData.interpretation?.[0]?.coding?.[0]?.code === "HH" ?
+                                        <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700">
+                        <span className="h-2 w-2 rounded-full bg-red-500"></span>
+                            Critical High
+                            </div> : observationData.interpretation?.[0]?.coding?.[0]?.code === "A" ?
+                                            <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700">
+                        <span className="h-2 w-2 rounded-full bg-red-500"></span>
+                            Abnormal
+                            </div> :
+                     null}
             </div>
 
             {/* Effective Date Card */}
@@ -222,47 +245,6 @@ return (
             </div>
         </section>
 
-        {/* Observation Components */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-slate-900">
-                Observation Components
-            </h2>
-
-            <div className="mt-4 overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                    <thead>
-                        <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400">
-                            <th className="py-3 font-medium">Component</th>
-                            <th className="py-3 font-medium">Result</th>
-                            <th className="py-3 font-medium">Unit</th>
-                        </tr>
-                    </thead>
-
-                    <tbody className="divide-y divide-slate-100">
-                        <tr>
-                            <td className="py-4 font-medium text-slate-700">
-                                Hemoglobin A1c
-                            </td>
-                            <td className="py-4 font-semibold text-slate-900">
-                                5.7
-                            </td>
-                            <td className="py-4 text-slate-500">%</td>
-                        </tr>
-
-                        <tr>
-                            <td className="py-4 font-medium text-slate-700">
-                                Estimated Average Glucose
-                            </td>
-                            <td className="py-4 font-semibold text-slate-900">
-                                117
-                            </td>
-                            <td className="py-4 text-slate-500">mg/dL</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
         {/* Additional Information */}
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="text-lg font-semibold text-slate-900">
@@ -276,8 +258,9 @@ return (
                         Performer
                     </p>
                     <p className="mt-2 text-sm font-medium text-slate-800">
-                        Jane Smith, MD
-                    </p>
+                        {practitioner.name?.[0]?.given[0] ? `${practitioner.name?.[0]?.given[0]} ${practitioner.name?.[0]?.family}
+                        : ${practitioner.qualification?.[0]?.code?.text}`:"Practitioner Unavailable"}
+                 </p>
                 </div>
 
        
@@ -310,8 +293,7 @@ return (
                 </h3>
 
                 <p className="mt-2 text-sm leading-6 text-slate-600">
-                    Hemoglobin A1c result reviewed and documented as part
-                    of the patient's routine laboratory evaluation.
+                    {observationData.note?.[0]?.text}
                 </p>
             </div>
         </section>

@@ -25,6 +25,7 @@ function ObservationModal({open, handleClose, patientId, onObservationCreated}) 
     const [performer, setPerformer] = useState({});
     const [loadPractitioners, setLoadPractitioners] = useState(false);
     const [practitioners, setPractitioners] = useState([]);
+    const [observationNotes, setObservationNotes] = useState([]);
     console.log(performer)
      useEffect(()=> {
             const fetchData = async()=>{
@@ -161,8 +162,8 @@ function ObservationModal({open, handleClose, patientId, onObservationCreated}) 
                         coding: [
                             {
                                 system: "http://terminology.hl7.org/CodeSystem/observation-category",
-                                code: {category},
-                                display: {category}
+                                code: category,
+                                display: category
                             }
                         ]
                     }
@@ -174,7 +175,15 @@ function ObservationModal({open, handleClose, patientId, onObservationCreated}) 
                             display: performer.name
                         }
                     ]
-                })
+                }),
+                note: observationNotes.trim()
+                    ? [
+                        {
+                            text:observationNotes.trim(),
+                            time: new Date().toISOString()
+                        }
+                    ]
+                    :[]
             })
         })
             const data = await response.json();
@@ -402,9 +411,9 @@ function ObservationModal({open, handleClose, patientId, onObservationCreated}) 
                                 >
                                     <option value="">Select a Category</option>
                                     <option value="laboratory">Laboratory</option>
-                                    <option value="vital-signs">Vital-Signs</option>
+                                    <option value="vital-signs">Vital Signs</option>
                                     <option value="exam">Exam</option>
-                                    <option value="social-history">Social-History</option>
+                                    <option value="social-history">Social History</option>
                                 </select>
                             </div>
                             <div>
@@ -513,6 +522,21 @@ function ObservationModal({open, handleClose, patientId, onObservationCreated}) 
                                         )
                                     })}
                                 </select>
+                            </div>
+                             <div className="sm:col-span-2">
+                                <label
+                                    htmlFor="observation-notes"
+                                    className="mb-1.5 block text-sm font-medium text-gray-700"
+                                >
+                                    Observation Notes
+                                </label>
+                                <textarea
+                                    id="observation-notes"
+                                    placeholder="write notes here"
+                                    value={observationNotes}
+                                    onChange={(e) => setObservationNotes(e.target.value)}
+                                    className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-800 shadow-sm outline-none transition placeholder:text-gray-400 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
+                                />
                             </div>
                         </div>
                     </div>
