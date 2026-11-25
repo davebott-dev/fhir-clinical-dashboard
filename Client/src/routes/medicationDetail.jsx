@@ -1,6 +1,8 @@
 import {useState, useEffect} from 'react';
 import {useParams, useLocation, useNavigate} from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 
 
 function MedicationDetail() {
@@ -41,7 +43,7 @@ function MedicationDetail() {
 
             {/* Header */}
             <div className="mb-6">
-
+        <div className="flex w-full items-center justify-between gap-4">
                 <button
                     onClick={() => navigate(`/patient/${patientId}/medication-list`)}
                     className="mb-4 inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:bg-indigo-50 hover:text-indigo-700"
@@ -49,7 +51,18 @@ function MedicationDetail() {
                     <ArrowBackIcon fontSize="small" />
                     Back to Medications Requests
                 </button>
+                {/*right side buttons*/}
+        <div className = "flex items-center gap-3">
+        <button className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700">
+            <EditIcon fontSize="small"/>
+            Edit Medication Request
+            </button>
 
+        <button className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700">
+            <DeleteIcon fontSize="small"/>
+            Delete Medication Request</button>
+        </div>
+            </div>
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-slate-900">

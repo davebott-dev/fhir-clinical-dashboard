@@ -6,6 +6,8 @@ import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 
 function EncounterDetail() {
     const {patientId, encounterId} = useParams();
@@ -68,8 +70,8 @@ function EncounterDetail() {
 
     <div className="flex flex-wrap items-end justify-between gap-4">
 
-        <div className="space-y-3">
-
+    <div className="w-full space-y-4">
+        <div className="flex w-full items-center justify-between gap-4">
             {/* Back Navigation */}
             <button
                 onClick={() => navigate(`/patient/${patientId}/encounter-history`)}
@@ -78,6 +80,17 @@ function EncounterDetail() {
                 <ArrowBackIcon fontSize="small" />
                 Back to Encounters
             </button>
+            <div className="ml-auto flex items-center gap-3">
+        <button className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700">
+            <EditIcon fontSize="small"/>
+            Edit Encounter
+            </button>
+
+        <button className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700">
+            <DeleteIcon fontSize="small"/>
+            Delete Encounter</button>
+        </div>
+        </div>
 
             <div>
                 <h1 className="text-2xl font-bold text-slate-900">

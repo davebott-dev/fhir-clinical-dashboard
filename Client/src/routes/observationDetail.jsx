@@ -4,6 +4,8 @@ import moment from 'moment'; // for easier date formatting
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined';
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 
 function ObservationDetail() {
     const {patientId,observationId} = useParams();
@@ -17,7 +19,6 @@ function ObservationDetail() {
     const [loadPractitioner, setLoadPractitioner] =useState(false);
     const [loadPatient, setLoadPatient] = useState(false);
     const [loadEncounter, setLoadEncounter] =useState(false);
-    console.log(observationData)
 
     const statusColors = {
         final: 'bg-green-100 text-green-700',
@@ -98,6 +99,7 @@ function ObservationDetail() {
 // tailwind css generated with help from genAI
 return (
     <div className="mx-auto w-full max-w-6xl space-y-6 pb-10">
+        <div className="flex w-full items-center justify-between gap-4">
 
         {/* Back Button */}
         <button
@@ -107,7 +109,18 @@ return (
             <ArrowBackIcon fontSize="small" />
             Back to Observations
         </button>
+        {/*right side buttons*/}
+        <div className = "flex items-center gap-3">
+        <button className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700">
+            <EditIcon fontSize="small"/>
+            Edit Observation
+            </button>
 
+        <button className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700">
+            <DeleteIcon fontSize="small"/>
+            Delete Observation</button>
+        </div>
+        </div>
         {/* Header */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-start">
