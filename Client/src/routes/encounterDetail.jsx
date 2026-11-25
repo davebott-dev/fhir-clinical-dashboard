@@ -60,12 +60,12 @@ function EncounterDetail() {
         });
         if(!response.ok) {
             throw new Error(
-                "server ran into an error deleting observation"
+                "server ran into an error deleting encounter"
             )
         }
         navigate(`/patient/${patientId}/encounter-history`);
       } catch (error) {
-        console.error('Error deleting observation:', error);
+        console.error('Error deleting encounter:', error);
       }
     }
   };

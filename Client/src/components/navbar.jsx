@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import {useNavigate} from 'react-router-dom';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 
 function Navbar() {
     const [searchTerm, setSearchTerm] = useState('');
     const [loadPractitioner, setLoadPractitioner] = useState(false);
-    const [practitioner, setPractitioner] = useState({})
+    const [practitioner, setPractitioner] = useState({});
+    const [open, setOpen] = useState(false);
+    const [anchorEl, setAnchorEl] = useState(null);
     const navigate = useNavigate();
 
         useEffect(()=> {
@@ -73,6 +77,11 @@ function Navbar() {
         console.log('Searching for:', searchTermArray);
     };
 
+    const handleLogOut = () => {
+        sessionStorage.removeItem("selectedProvider");
+        window.location.reload();
+    }
+
     // tailwind css and svg tags created with help of generative AI
     return (
         <header className="sticky top-0 z-20 w-full border-b border-slate-200 bg-white shadow-sm">
@@ -123,6 +132,7 @@ function Navbar() {
                     <button
                         type="button"
                         className="flex items-center gap-3 rounded-lg p-2 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        onClick = {(e)=> setAnchorEl(e.currentTarget) }
                     >
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-700">
                             <svg
@@ -148,7 +158,24 @@ function Navbar() {
                             </p>
                         </div>
                     </button>
-
+                        <Menu
+                         anchorEl={anchorEl}
+                         open={Boolean(anchorEl)}
+                         onClose={() => setAnchorEl(null)}
+                         elevation={1}
+                         slotProps = {{
+                         paper: {
+                            sx: {
+                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                            border: '1px solid #e0e0e0',
+                            minWidth: '150px'
+                                }
+                                }
+                                }}
+                        >
+                        <MenuItem onClick={() => { setAnchorEl(null)}}>View Account</MenuItem>
+                        <MenuItem onClick={() => { setAnchorEl(null); handleLogOut(); }}>Log Out</MenuItem>
+                        </Menu>
                 </div>
             </div>
         </header>

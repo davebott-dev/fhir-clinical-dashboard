@@ -1,4 +1,31 @@
+import {useState, useEffect} from 'react';
+
 function Index() {
+
+  const [loadPractitioner,setLoadPractitioner] = useState(false);
+  const [practitioner, setPractitioner] = useState({});
+
+          useEffect(()=> {
+          setLoadPractitioner(true);
+          const fetchProvider = async()=>{
+              try{
+                  const response = await fetch(`https://hapi.fhir.org/baseR4/Practitioner/${sessionStorage.selectedProvider}`);
+                  if(!response.ok){
+                      throw new Error (
+                          'error fetching practitioners'
+                      )
+                  }
+                  const data = await response.json();
+                  setPractitioner(data);
+                  console.log(data)
+              } catch(error) {
+                  console.error('error fetching providers', error);
+              }finally{
+                  setLoadPractitioner(false);
+              }
+          }
+          fetchProvider();
+      },[]);
 
   //tailwindcss classes create with help of generative AI
 
@@ -11,7 +38,8 @@ function Index() {
         </p>
 
         <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-          Welcome to your dashboard
+          Welcome to your dashboard {practitioner.name?.[0]?.given[0]},  
+
         </h1>
 
         <p className="mt-3 max-w-2xl text-base leading-7 text-slate-500">

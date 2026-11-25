@@ -10,7 +10,7 @@ function App() {
   const location = useLocation(); // Get the current location object from react-router-dom
   const hideNavbarRoutes = ['/','/patient_search', '/create_patient']; // Define the routes where the Navbar should be hidden
   const showNavbar = !hideNavbarRoutes.includes(location.pathname) // Determine whether to show the Navbar based on the current route
-  const [selectedProvider, setSelectedProvider] = useState(sessionStorage.getItem("selectedProvider")|| "");
+  const [selectedProvider, setSelectedProvider] = useState(sessionStorage.getItem("selectedProvider")|| ""); // initialize variable by seeing if a variable exists in session first
   const [loadPractitioners, setLoadPractitioners] = useState(false);
   const [practitioners, setPractitioners] = useState([]);
 
@@ -39,7 +39,7 @@ function App() {
 
   const handleProviderSelection = (e) => {
     setSelectedProvider(e.target.value);
-    sessionStorage.setItem("selectedProvider", e.target.value);
+    sessionStorage.setItem("selectedProvider", e.target.value); // store value in session state so it persists through page reloads
   }
 
   // tailwind css generated with help of GenAI
