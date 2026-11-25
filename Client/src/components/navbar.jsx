@@ -1,9 +1,33 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {useNavigate} from 'react-router-dom';
 
 function Navbar() {
     const [searchTerm, setSearchTerm] = useState('');
+    const [loadPractitioner, setLoadPractitioner] = useState(false);
+    const [practitioner, setPractitioner] = useState({})
     const navigate = useNavigate();
+
+        useEffect(()=> {
+        setLoadPractitioner(true);
+        const fetchProvider = async()=>{
+            try{
+                const response = await fetch(`https://hapi.fhir.org/baseR4/Practitioner/${sessionStorage.selectedProvider}`);
+                if(!response.ok){
+                    throw new Error (
+                        'error fetching practitioners'
+                    )
+                }
+                const data = await response.json();
+                setPractitioner(data);
+                console.log(data)
+            } catch(error) {
+                console.error('error fetching providers', error);
+            }finally{
+                setLoadPractitioner(false);
+            }
+        }
+        fetchProvider();
+    },[]);
 
     const handleSearch = async() => {
         let searchTermArray = searchTerm.split(' ');
@@ -117,10 +141,10 @@ function Navbar() {
 
                         <div className="hidden text-left sm:block">
                             <p className="text-sm font-semibold text-slate-800">
-                                Dr. John Doe
+                                {practitioner.name?.[0]?.given[0]} {practitioner.name?.[0].family}
                             </p>
                             <p className="text-xs text-slate-500">
-                                Clinical Dashboard
+                                 {practitioner.qualification?.[0]?.code?.text ? practitioner.qualification?.[0]?.code?.text : "Medical Practitioner"} 
                             </p>
                         </div>
                     </button>

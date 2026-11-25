@@ -44,12 +44,12 @@ function MedicationDetail() {
         });
         if(!response.ok) {
             throw new Error(
-                "server ran into an error deleting observation"
+                "server ran into an error deleting medication request"
             )
         }
         navigate(`/patient/${patientId}/medication-list`);
       } catch (error) {
-        console.error('Error deleting observation:', error);
+        console.error('Error deleting medication request:', error);
       }
     }
   };

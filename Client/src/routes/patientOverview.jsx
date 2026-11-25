@@ -162,7 +162,6 @@ function PatientOverview() {
             <Detail label="Last Name" value={lastName} />
             <Detail label="Email" value={email} />
             <Detail label="Phone Number" value={phone} />
-            <Detail label="Legal Sex / Gender" value={patient.gender} />
             <Detail label="Birth Date" value={patient.birthDate} />
           </dl>
         </Card>
@@ -173,9 +172,8 @@ function PatientOverview() {
         >
           <dl className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
             <Detail label="Address" value={formattedAddress} />
-            <Detail label="Phone Number" value={phone} />
             <Detail label="Ethnicity" value={ethnicity} />
-            <Detail label="Email" value={email} />
+            <Detail label="Legal Sex / Gender" value={patient.gender} />
             <Detail label="Preferred Language" value={language} />
           </dl>
         </Card>
