@@ -95,6 +95,24 @@ function ObservationDetail() {
         }
         fetchPatient();
     },[]);
+    
+    const handleDeleteObservation = async() => {
+      if (window.confirm('Are you sure you want to delete this observation?')) {
+      try{
+        const response = await fetch(`https://hapi.fhir.org/baseR4/Observation/${observationData.id}`, {
+          method: 'DELETE',
+        });
+        if(!response.ok) {
+            throw new Error(
+                "server ran into an error deleting observation"
+            )
+        }
+        navigate(`/patient/${patientId}/observations`);
+      } catch (error) {
+        console.error('Error deleting observation:', error);
+      }
+    }
+  };
 
 // tailwind css generated with help from genAI
 return (
@@ -116,7 +134,9 @@ return (
             Edit Observation
             </button>
 
-        <button className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700">
+        <button className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+            onClick={handleDeleteObservation}
+        >
             <DeleteIcon fontSize="small"/>
             Delete Observation</button>
         </div>

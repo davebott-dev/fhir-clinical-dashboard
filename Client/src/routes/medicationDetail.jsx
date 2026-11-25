@@ -36,6 +36,24 @@ function MedicationDetail() {
         fetchProvider();
     },[]);
 
+    const handleDeleteMedication = async() => {
+      if (window.confirm('Are you sure you want to delete this medication request?')) {
+      try{
+        const response = await fetch(`https://hapi.fhir.org/baseR4/MedicationRequest/${medicationData.id}`, {
+          method: 'DELETE',
+        });
+        if(!response.ok) {
+            throw new Error(
+                "server ran into an error deleting observation"
+            )
+        }
+        navigate(`/patient/${patientId}/medication-list`);
+      } catch (error) {
+        console.error('Error deleting observation:', error);
+      }
+    }
+  };
+
  // tailwind CSS generated with help of GenAI
  
    return (
@@ -58,7 +76,9 @@ function MedicationDetail() {
             Edit Medication Request
             </button>
 
-        <button className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700">
+        <button className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+            onClick= {handleDeleteMedication}
+        >
             <DeleteIcon fontSize="small"/>
             Delete Medication Request</button>
         </div>

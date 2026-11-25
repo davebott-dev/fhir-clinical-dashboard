@@ -52,6 +52,24 @@ function EncounterDetail() {
     fetchData();
     },[]);
 
+    const handleDeleteEncounter= async() => {
+      if (window.confirm('Are you sure you want to delete this encounter?')) {
+      try{
+        const response = await fetch(`https://hapi.fhir.org/baseR4/Encounter/${encounterData.id}`, {
+          method: 'DELETE',
+        });
+        if(!response.ok) {
+            throw new Error(
+                "server ran into an error deleting observation"
+            )
+        }
+        navigate(`/patient/${patientId}/encounter-history`);
+      } catch (error) {
+        console.error('Error deleting observation:', error);
+      }
+    }
+  };
+
     //Tailwind CSS generated with help of GenAI
     return(
         <div className="min-h-screen bg slate-50 p-6">
@@ -86,7 +104,9 @@ function EncounterDetail() {
             Edit Encounter
             </button>
 
-        <button className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700">
+        <button className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+            onClick={handleDeleteEncounter}
+        >
             <DeleteIcon fontSize="small"/>
             Delete Encounter</button>
         </div>
