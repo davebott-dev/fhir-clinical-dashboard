@@ -55,20 +55,25 @@ function PatientLayout() {
   const handleDeletePatient = async() => {
     if (window.confirm('Are you sure you want to delete this patient?')) {
       try{
-        await fetch(`https://hapi.fhir.org/baseR4/Patient/${patientId}`, {
+        setLoading(true);
+        const response = await fetch(`https://hapi.fhir.org/baseR4/Patient/${patientId}`, {
           method: 'DELETE',
         });
+
+        if(!response.ok) {
+          throw new Error(`failed to delete patient: ${response.status}`)
+        }
+          setPatient(null);
+          setOpen(true);
+          navigate('/patient_search');
       } catch (error) {
         console.error('Error deleting patient:', error);
+      } finally {
+        setLoading(false);
       }
-      setPatient(null);
-      setPatientObservations([]);
-      setLoading(true);
-      setOpen(true);
-      setTimeout(() => navigate('/patient_search'), 3000);
-
     }
   };
+
 // styled with Tailwind CSS with help of GenAI
   return (
     <main className ="min-h-screen bg-slate-50 px-4 pt-6 pb-28" >
