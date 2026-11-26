@@ -15,8 +15,6 @@ function PatientOverview() {
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  console.log(patient)
-
   useEffect(() => {
         const fetchData = async () => {
         if(!patient?.id) return;

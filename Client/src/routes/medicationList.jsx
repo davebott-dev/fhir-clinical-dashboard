@@ -15,6 +15,7 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import CircularProgress from '@mui/material/CircularProgress';
 import MedicationModal from '../components/medicationModal';
+import EditModal from '../components/editModal';
 
 function MedicationList() {
   const [patient] = useOutletContext();
@@ -24,6 +25,7 @@ function MedicationList() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [open, setOpen] = useState(false);
+  const [openEdit, setOpenEdit] =useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedMedication, setSelectedMedication] = useState(null);  
   const [loadPractitioners,setLoadPractitioners]=useState(false);
@@ -31,6 +33,8 @@ function MedicationList() {
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
   const navigate = useNavigate();
+  const handleOpenEdit = () => setOpenEdit(true);
+  const handleCloseEdit= () =>setOpenEdit(false);
 
   useEffect(()=> {
         const fetchData = async() => {
@@ -108,8 +112,10 @@ function MedicationList() {
     setPage(0);
   };``
 
-    const handleEditMedication = () => {
-      console.log('edit medication')
+    const handleEditMedication = (medicationRequestId) => {
+      setSelectedMedication(medicationRequestId)
+      handleOpenEdit();
+      console.log('edit medication');
     }
 
    const handleDeleteMedication = async(medicationId) => {
@@ -317,7 +323,7 @@ function MedicationList() {
                                                         }
                                                     }}
                                                   >
-                                                    <MenuItem onClick={() => { setAnchorEl(null); handleEditMedication(); }}>Edit Medication</MenuItem>
+                                                    <MenuItem onClick={() => { setAnchorEl(null); handleEditMedication(selectedMedication); }}>Edit Medication</MenuItem>
                                                     <MenuItem onClick={() => { setAnchorEl(null); handleDeleteMedication(selectedMedication); }}>Delete Medication</MenuItem>
                                                   </Menu>
                                         </TableCell>
@@ -349,6 +355,8 @@ function MedicationList() {
     </section>
     </>
       <MedicationModal open={open} handleClose={handleClose} patientId={patient?.id} onMedicationCreated={handleCreatedMedication}/>
+      <EditModal open={openEdit} handleClose={handleCloseEdit} resourceType="MedicationRequest" resourceId={selectedMedication}/>
+
     </main>
   );
 }

@@ -15,6 +15,7 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import CircularProgress from '@mui/material/CircularProgress';
 import ObservationModal from '../components/observationModal';
+import EditModal from '../components/editModal';
 
 function ObservationList() {
   const [patient] = useOutletContext();
@@ -24,11 +25,14 @@ function ObservationList() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [open, setOpen] = useState(false);
+  const [openEdit, setOpenEdit]=  useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedObservation, setSelectedObservation] = useState(null);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
   const navigate = useNavigate();
+  const handleOpenEdit = () => setOpenEdit(true);
+  const handleCloseEdit= () =>setOpenEdit(false);
 
   // Sort observations by date in descending order
   const sortedObservations= [...patientObservations].sort((a,b) => {
@@ -92,8 +96,9 @@ function ObservationList() {
     setPage(0);
   };``
 
-  const handleEditObservation = () => {
-    // Implement edit observation logic here
+  const handleEditObservation = (observationId) => {
+    setSelectedObservation(observationId)
+    handleOpenEdit()
     console.log('Edit observation clicked');
   }
 
@@ -291,7 +296,7 @@ function ObservationList() {
                                                         }
                                                     }}
                                                   >
-                                                    <MenuItem onClick={() => { setAnchorEl(null); handleEditObservation(); }}>Edit Observation</MenuItem>
+                                                    <MenuItem onClick={() => { setAnchorEl(null); handleEditObservation(selectedObservation); }}>Edit Observation</MenuItem>
                                                     <MenuItem onClick={() => { setAnchorEl(null); handleDeleteObservation(selectedObservation); }}>Delete Observation</MenuItem>
                                                   </Menu>
                                         </TableCell>
@@ -323,6 +328,8 @@ function ObservationList() {
     </section>
     </>
           <ObservationModal open={open} handleClose={handleClose} patientId={patient?.id} onObservationCreated={handleCreatedObservation}/>
+          <EditModal open={openEdit} handleClose={handleCloseEdit} resourceType="Observation" resourceId={selectedObservation}/>
+
     </main>
   );
 }

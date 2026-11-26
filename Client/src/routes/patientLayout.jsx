@@ -10,6 +10,7 @@ import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import AddCommentIcon from '@mui/icons-material/AddComment';
 import NotesModal from '../components/notesModal.jsx';
+import EditModal from '../components/editModal.jsx';
 
 
 function PatientLayout() {
@@ -20,9 +21,12 @@ function PatientLayout() {
   const [anchorEl, setAnchorEl] = useState(null);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [openEdit,setOpenEdit] =useState(false);
   const [openModal, setOpenModal] = useState(false);
   const handleOpenModal = () => setOpenModal(true);
   const handleCloseModal = () => setOpenModal(false);
+  const handleOpenEdit = () => setOpenEdit(true);
+  const handleCloseEdit= () =>setOpenEdit(false);
 
     useEffect(() => {
     // Fetch patient data from fhir mock server based on patientId
@@ -48,7 +52,7 @@ function PatientLayout() {
   }
 
   const handleEditPatient = () => {
-    // Implement edit patient logic here
+    handleOpenEdit()
     console.log('Edit patient clicked');
   };
 
@@ -177,6 +181,7 @@ function PatientLayout() {
   <AddCommentIcon />
 </IconButton>
           <NotesModal open={openModal} handleClose={handleCloseModal} patientId={patientId} />
+          <EditModal open={openEdit} handleClose={handleCloseEdit} resourceType="Patient" resourceId={patientId}/>
     </main>
   );
 }

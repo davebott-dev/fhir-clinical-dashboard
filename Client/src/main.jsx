@@ -14,6 +14,7 @@ import PatientFiles from './routes/patientFiles.jsx';
 import EncounterDetail from './routes/encounterDetail.jsx';
 import MedicationDetail from './routes/medicationDetail.jsx';
 import ObservationDetail from './routes/observationDetail.jsx';
+import PractitionerAccount from './routes/practitionerAccount.jsx';
 
 import Index from './routes/index.jsx';
 import './index.css';
@@ -26,6 +27,10 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <Index />
+      },
+      {
+        path:'practitioner/account/:practitionerId',
+        element: <PractitionerAccount/>
       },
       {
         path: 'patient_search',

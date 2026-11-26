@@ -15,6 +15,7 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import CircularProgress from '@mui/material/CircularProgress';
 import EncounterModal from '../components/encounterModal';
+import EditModal from '../components/editModal';
 
 function EncounterHistory() {
   const [patient] = useOutletContext();
@@ -24,11 +25,14 @@ function EncounterHistory() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [open, setOpen] = useState(false);
+  const [openEdit, setOpenEdit] =useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedEncounter, setSelectedEncounter] = useState(null);  
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
   const navigate = useNavigate();
+  const handleOpenEdit = () => setOpenEdit(true);
+  const handleCloseEdit= () =>setOpenEdit(false);
 
   useEffect(()=> {
         const fetchData = async() => {
@@ -85,7 +89,9 @@ function EncounterHistory() {
     setPage(0);
   };``
 
-    const handleEditEncounter = () => {
+    const handleEditEncounter = (encounterId) => {
+      setSelectedEncounter(encounterId);
+      handleOpenEdit();
       console.log('edit encounter')
     }
 
@@ -287,7 +293,7 @@ function EncounterHistory() {
                                                         }
                                                     }}
                                                   >
-                                                    <MenuItem onClick={() => { setAnchorEl(null); handleEditEncounter(); }}>Edit Encounter</MenuItem>
+                                                    <MenuItem onClick={() => { setAnchorEl(null); handleEditEncounter(selectedEncounter); }}>Edit Encounter</MenuItem>
                                                     <MenuItem onClick={() => { setAnchorEl(null); handleDeleteEncounter(selectedEncounter); }}>Delete Encounter</MenuItem>
                                                   </Menu>
                                         </TableCell>
@@ -319,6 +325,8 @@ function EncounterHistory() {
     </section>
     </>
       <EncounterModal open={open} handleClose={handleClose} patientId={patient?.id} onEncounterCreated={handleCreatedEncounter}/>
+      <EditModal open={openEdit} handleClose={handleCloseEdit} resourceType="Encounter" resourceId={selectedEncounter}/>
+
     </main>
   );
 }
