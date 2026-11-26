@@ -5,6 +5,7 @@ import Box from '@mui/material/Box';
 function EditModal({ open, handleClose, resourceType, resourceId }) {
     const [resource, setResource] = useState({});
     const [loading,setLoading] =useState(false);
+    const [updateLoading, setUpdateLoading] =useState(false);
     // initialize update objects for each
     const [patientData, setPatientData] = useState({
         firstName: '',
@@ -160,6 +161,20 @@ const [observationData, setObservationData] = useState({
   { name: "Wyoming", abbreviation: "WY" }
 ];
 
+const ethnicityOptions = [
+  { code: "2135-2", name: "Hispanic or Latino" },
+    { code: "2186-5", name: "Not Hispanic or Latino" }
+];
+
+const handlePatientChange = (e) => {
+    const { name, value } = e.target;
+
+    setPatientData(prev => ({
+        ...prev,
+        [name]: value
+    }));
+};
+
     useEffect(()=> {
         setLoading(true);
         const fetchResource = async()=>{
@@ -238,7 +253,104 @@ const [observationData, setObservationData] = useState({
             }
         }
         fetchResource();
-    },[resourceId,resourceType])    
+    },[resourceId,resourceType]);
+    
+    const updateResource = async() => {
+        setUpdateLoading(true);
+
+        try{
+            const response = await fetch(`https://hapi.fhir.org/baseR4/${resourceType}/${resourceId}`, {
+                method: "PUT", // patch method to update patient fields
+                headers: {
+                    'Content-Type': 'application/fhir+json'
+
+                },
+                body:JSON.stringify({
+                    ...resource,
+                    active: true,
+                    birthDate: patientData.birthDate,
+                    gender: patientData.gender,
+                    resourceType: 'Patient',
+                    name: [
+                        {
+                            given: [patientData.firstName],
+                            family: patientData.lastName,
+                            use: 'official'
+                        }
+                    ],
+                    ...((patientData.phone || patientData.email) && {
+                      telecom: [
+                        ...(patientData.email ? [{
+                            system: 'email',
+                            value: patientData.email
+                        }] : []),
+                        ...(patientData.phone ? [{
+                          system: "phone",
+                          value:patientData.phone,
+                          use: "mobile"
+                        }] : [] )
+                    ]
+                }),
+                    ...(patientData.streetAddress && {
+                      address: [{
+                        use: "home",
+                        line: [
+                          patientData.streetAddress
+                        ],
+                        city: patientData.city,
+                        state:patientData.state,
+                        postalCode: patientData.zipCode,
+                        country:patientData.country
+                      }]
+                    }),
+                    ...(patientData.preferredLanguage && {
+                      communication: [{
+                        language: {
+                          coding: [{
+                            system: "urn:ietf:bcp:47",
+                            code: patientData.preferredLanguage,
+                            display: languageOptions.find(language => language.code == patientData.preferredLanguage)?.name
+                          }],
+                          text: languageOptions.find(language => language.code == patientData.preferredLanguage)?.name
+                        },
+                        preferred: true
+                      }]
+                    }),
+                    ...(patientData.ethnicity && {
+                      extension: [{
+                       url: "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity",
+                        extension: [
+                          {
+                            url: "ombCategory",
+                            valueCoding: {
+                              system: "urn:oid:2.16.840.1.113883.6.238",
+                              code: patientData.ethnicity,
+                              display: ethnicityOptions.find( item => item.code === patientData.ethnicity)?.name
+                            }
+                          },
+                          {
+                            url: "text",
+                            valueString: ethnicityOptions.find( item => item.code === patientData.ethnicity)?.name
+                          }
+                        ]
+                      }]
+                    })
+                })
+            })
+             if(response.ok) {
+              const data = await response.json();
+              console.log(data);
+            } else {
+                throw new Error(`Failed to update patient: ${response.statusText}`);
+            }
+
+        }catch(error) {
+            console.error(error);
+        } finally {
+            setUpdateLoading(false);
+            window.location.reload()
+        }
+    }
 
 // tailwind css generated with help of GenAI
 const inputClass =
@@ -261,11 +373,10 @@ const sectionTitleClass =
                     <input 
                         type="text" 
                         className={inputClass} 
+                        name ="firstName"
                         placeholder="First name" 
                         value={patientData.firstName}
-                        onChange={(e,prev)=> setPatientData({...prev,
-                            firstName:e.target.value
-                        })}
+                        onChange={handlePatientChange}
                         />
                 </div>
 
@@ -274,11 +385,10 @@ const sectionTitleClass =
                     <input 
                         type="text" 
                         className={inputClass} 
+                        name="lastName"
                         placeholder="Last name"
                         value = {patientData.lastName}
-                        onChange={(e,prev)=> setPatientData({...prev,
-                            lastName:e.target.value
-                        })}
+                        onChange={handlePatientChange}
                         />
                 </div>
 
@@ -287,10 +397,9 @@ const sectionTitleClass =
                     <input 
                         type="date" 
                         className={inputClass}
+                        name="birthDate"
                         value = {patientData.birthDate}
-                        onChange={(e,prev)=> setPatientData({...prev,
-                            birthDate:e.target.value
-                        })}
+                        onChange={handlePatientChange}
                     />
                 </div>
 
@@ -299,9 +408,8 @@ const sectionTitleClass =
                     <select 
                         className={inputClass} 
                         value ={patientData.gender}
-                        onChange={(e,prev)=> setPatientData({...prev,
-                            gender:e.target.value
-                        })}
+                        name="gender"
+                        onChange={handlePatientChange}
                         >
                         <option value="">Select gender</option>
                         <option value="male">Male</option>
@@ -316,9 +424,8 @@ const sectionTitleClass =
                     <select 
                         className={inputClass}
                         value={patientData.ethnicity}
-                        onChange={(e,prev)=> setPatientData({...prev,
-                            ethnicity:e.target.value
-                        })}
+                        name="ethnicity"
+                        onChange={handlePatientChange}
                         >
                         <option value="">Select ethnicity</option>
                         <option value="2135-2">Hispanic or Latino</option>
@@ -330,11 +437,10 @@ const sectionTitleClass =
                     <label className={labelClass}>Preferred Language</label>
                     <select
                     className={inputClass} 
+                        name = "preferredLanguage"
                         placeholder="Preferred language"
                         value ={patientData.preferredLanguage}
-                        onChange={(e,prev)=> setPatientData({...prev,
-                            preferredLanguage:e.target.value
-                        })}
+                        onChange={handlePatientChange}
                     >   
                         <option value="">Select a Language</option>
                         {languageOptions.map((language) => {
@@ -356,11 +462,10 @@ const sectionTitleClass =
                     <input 
                         type="email" 
                         className={inputClass} 
+                        name="email"
                         placeholder="Email address"
                         value ={patientData.email}
-                        onChange={(e,prev)=> setPatientData({...prev,
-                            email:e.target.value
-                        })}
+                        onChange={handlePatientChange}
                         />
                 </div>
 
@@ -369,11 +474,10 @@ const sectionTitleClass =
                     <input 
                         type="tel" 
                         className={inputClass} 
+                        name ="phone"
                         placeholder="Phone number"
                         value = {patientData.phone}
-                        onChange={(e,prev)=> setPatientData({...prev,
-                            phone:e.target.value
-                        })}
+                        onChange={handlePatientChange}
                         />
                 </div>
             </div>
@@ -386,11 +490,10 @@ const sectionTitleClass =
                     <input 
                         type="text" 
                         className={inputClass} 
+                        name = "streetAddress"
                         placeholder="Street address"
                         value = {patientData.streetAddress}
-                        onChange={(e,prev)=> setPatientData({...prev,
-                            streetAddress:e.target.value
-                        })}
+                        onChange={handlePatientChange}
                         />
                 </div>
 
@@ -399,11 +502,10 @@ const sectionTitleClass =
                     <input 
                         type="text" 
                         className={inputClass} 
+                        name = "city"
                         placeholder="City"
                         value = {patientData.city}
-                        onChange={(e,prev)=> setPatientData({...prev,
-                            city:e.target.value
-                        })}
+                        onChange={handlePatientChange}
                         />
                 </div>
 
@@ -411,10 +513,9 @@ const sectionTitleClass =
                     <label className={labelClass}>State</label>
                     <select 
                         className={inputClass} 
+                        name = "state"
                         value={patientData.state}
-                        onChange={(e,prev)=> setPatientData({...prev,
-                            state:e.target.value
-                        })}
+                        onChange={handlePatientChange}
                         >
                     <option value="">Select a State</option>
                     {usStates.map((state)=> {
@@ -432,11 +533,10 @@ const sectionTitleClass =
                     <input 
                         type="text" 
                         className={inputClass} 
+                        name = "zipCode"
                         placeholder="ZIP code"
                         value = {patientData.zipCode}
-                        onChange={(e,prev)=> setPatientData({...prev,
-                            zipCode:e.target.value
-                        })}
+                        onChange={handlePatientChange}
                         />
                 </div>
 
@@ -444,12 +544,11 @@ const sectionTitleClass =
                     <label className={labelClass}>Country</label>
                     <input 
                         type="text" 
+                        name ="country"
                         className={inputClass} 
                         placeholder="Country"
                         value ={patientData.country}
-                        onChange={(e,prev)=> setPatientData({...prev,
-                            country:e.target.value
-                        })}
+                        onChange={handlePatientChange}
                         />
                 </div>
             </div>
@@ -790,8 +889,10 @@ const sectionTitleClass =
                     <button
                         type="button"
                         className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        onClick={updateResource}
+                        disabled = {updateLoading}
                     >
-                        Save Changes
+                        {updateLoading ? "Saving..." : "Save"}
                     </button>
                 </div>
             </Box>
