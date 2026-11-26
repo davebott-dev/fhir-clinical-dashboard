@@ -3,6 +3,8 @@ import {useParams, useLocation, useNavigate} from 'react-router-dom';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import EditModal from '../components/editModal';
+
 
 
 function MedicationDetail() {
@@ -12,8 +14,11 @@ function MedicationDetail() {
     const navigate = useNavigate();
     const [loadPractitioner,setLoadPractitioner]=useState(false);
     const [practitioner,setPractitioner]=useState({});
+    const handleOpenEdit = () => setOpenEdit(true);
+    const handleCloseEdit= () =>setOpenEdit(false);
+    const [openEdit, setOpenEdit] = useState(false);
 
-    console.log(medicationData)
+    console.log(medicationData);
 
     useEffect(()=> {
         setLoadPractitioner(true);
@@ -71,7 +76,9 @@ function MedicationDetail() {
                 </button>
                 {/*right side buttons*/}
         <div className = "flex items-center gap-3">
-        <button className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700">
+        <button className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+            onClick = {handleOpenEdit}
+        >
             <EditIcon fontSize="small"/>
             Edit Medication Request
             </button>
@@ -337,6 +344,8 @@ function MedicationDetail() {
 
                 </div>
             </div>
+                <EditModal open={openEdit} handleClose={handleCloseEdit} resourceType="MedicationRequest" resourceId={medicationData.id}/>
+
         </div>
     );
 }

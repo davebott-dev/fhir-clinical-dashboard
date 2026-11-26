@@ -1,28 +1,18 @@
-import { useNavigate } from 'react-router-dom';
-// basic account page with mock data generated...will edit next
-export default function PractitionerAccount() {
-    const navigate = useNavigate();
+import {useState, useAccount} from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import EditModal from '../components/editModal';
 
-    // Mock Practitioner data
-    const practitioner = {
-        id: '12345',
-        firstName: 'Jane',
-        lastName: 'Smith',
-        prefix: 'Dr.',
-        suffix: 'MD',
-        active: true,
-        qualification: 'Internal Medicine',
-        email: 'jane.smith@hospital.org',
-        phone: '(919) 555-0123',
-        gender: 'Female',
-        identifier: 'PR-102938',
-        address: {
-            street: '123 Medical Center Drive',
-            city: 'Chapel Hill',
-            state: 'NC',
-            zip: '27514'
-        }
-    };
+// basic account page with mock data generated...will edit next
+function PractitionerAccount() {
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
+    const location = useLocation();
+    const practitioner = location.state?.practitioner || {};
+    const handleOpenEdit = () => setOpenEdit(true);
+    const handleCloseEdit= () =>setOpenEdit(false);
+    const [openEdit, setOpenEdit] = useState(false);
+
+    console.log(practitioner);
 
     return (
         <div className="min-h-screen bg-slate-50 p-6">
@@ -48,6 +38,7 @@ export default function PractitionerAccount() {
 
                     <button
                         className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+                        onClick = {handleOpenEdit}
                     >
                         Edit Profile
                     </button>
@@ -57,28 +48,24 @@ export default function PractitionerAccount() {
                 <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                     <div className="flex flex-wrap items-center gap-5">
                         <div className="flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 text-2xl font-bold text-blue-700">
-                            {practitioner.firstName[0]}
-                            {practitioner.lastName[0]}
+                            {practitioner.name?.[0]?.given[0][0]}
+                            {practitioner.name?.[0]?.family[0]}
                         </div>
 
                         <div className="flex-1">
                             <h2 className="text-xl font-bold text-slate-900">
-                                {practitioner.prefix} {practitioner.firstName} {practitioner.lastName}, {practitioner.suffix}
+                                {practitioner.name?.[0]?.given[0]} {practitioner.name?.[0]?.family}
                             </h2>
                             <p className="mt-1 text-sm text-slate-500">
-                                {practitioner.qualification}
+                                {practitioner.qualification?.[0]?.code?.text ?? "N/A"} 
                             </p>
                             <p className="mt-1 text-xs text-slate-400">
-                                Practitioner ID: {practitioner.identifier}
+                                Practitioner ID: {practitioner.id}
                             </p>
                         </div>
 
-                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                            practitioner.active
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-slate-100 text-slate-600'
-                        }`}>
-                            {practitioner.active ? 'Active' : 'Inactive'}
+                        <span className='rounded-full px-3 py-1 text-xs font-semibold bg-green-100 text-green-700'>
+                            Active
                         </span>
                     </div>
                 </div>
@@ -98,11 +85,39 @@ export default function PractitionerAccount() {
                         </div>
 
                         <div className="space-y-4">
-                            <InfoField label="First Name" value={practitioner.firstName} />
-                            <InfoField label="Last Name" value={practitioner.lastName} />
-                            <InfoField label="Gender" value={practitioner.gender} />
-                            <InfoField label="Practitioner ID" value={practitioner.identifier} />
-                        </div>
+        <div>
+            <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+                First Name
+            </p>
+            <p className="text-sm font-medium text-slate-800">
+                {practitioner.name?.[0]?.given[0] || 'Not Provided'}
+            </p>
+        </div>                            
+        <div>
+            <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+                Last Name
+            </p>
+            <p className="text-sm font-medium text-slate-800">
+                {practitioner.name?.[0]?.family || 'Not Provided'}
+            </p>
+        </div>                            
+        <div>
+            <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+                Gender
+            </p>
+            <p className="text-sm font-medium text-slate-800">
+                {practitioner.gender || 'Not Provided'}
+            </p>
+        </div>                                
+        <div>
+            <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+                Practitioner ID
+            </p>
+            <p className="text-sm font-medium text-slate-800">
+                {practitioner.id || 'Not Provided'}
+            </p>
+        </div> 
+        </div>
                     </section>
 
                     {/* Contact Information */}
@@ -117,13 +132,30 @@ export default function PractitionerAccount() {
                         </div>
 
                         <div className="space-y-4">
-                            <InfoField label="Email Address" value={practitioner.email} />
-                            <InfoField label="Phone Number" value={practitioner.phone} />
-                            <InfoField label="Street Address" value={practitioner.address.street} />
-                            <InfoField
-                                label="City, State ZIP"
-                                value={`${practitioner.address.city}, ${practitioner.address.state} ${practitioner.address.zip}`}
-                            />
+            <div>
+            <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+                 Email
+            </p>
+            <p className="text-sm font-medium text-slate-800">
+                {practitioner.email || 'Not Provided'}
+            </p>
+             </div> 
+            <div>
+            <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+                 Phone Number
+            </p>
+            <p className="text-sm font-medium text-slate-800">
+                {practitioner.phone || 'Not Provided'}
+            </p>
+        </div>                             
+            <div>
+            <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+                 Address
+            </p>
+            <p className="text-sm font-medium text-slate-800">
+                {practitioner.address || 'Not Provided'}
+            </p>
+        </div>                             
                         </div>
                     </section>
 
@@ -139,30 +171,30 @@ export default function PractitionerAccount() {
                         </div>
 
                         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                            <InfoField label="Qualification" value={practitioner.qualification} />
-                            <InfoField label="Professional Suffix" value={practitioner.suffix} />
-                            <InfoField label="Professional Prefix" value={practitioner.prefix} />
-                            <InfoField
-                                label="Account Status"
-                                value={practitioner.active ? 'Active' : 'Inactive'}
-                            />
+            <div>
+            <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+                Qualification
+            </p>
+            <p className="text-sm font-medium text-slate-800">
+                {practitioner.qualification?.[0]?.code?.text || "Not Provided"} 
+            </p>
+            </div>                             
+                            <div>
+            <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+                Account Status
+            </p>
+            <p className="text-sm font-medium text-slate-800">
+                Active 
+            </p>
+            </div>         
                         </div>
                     </section>
                 </div>
             </div>
-        </div>
-    );
-}
+                <EditModal open={openEdit} handleClose={handleCloseEdit} resourceType="Practitioner" resourceId={practitioner.id}/>
 
-function InfoField({ label, value }) {
-    return (
-        <div>
-            <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">
-                {label}
-            </p>
-            <p className="text-sm font-medium text-slate-800">
-                {value || 'Not provided'}
-            </p>
         </div>
     );
-}
+};
+
+export default PractitionerAccount;

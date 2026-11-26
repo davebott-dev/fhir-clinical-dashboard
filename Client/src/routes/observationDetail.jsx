@@ -6,6 +6,8 @@ import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined';
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import EditModal from '../components/editModal';
+
 
 function ObservationDetail() {
     const {patientId,observationId} = useParams();
@@ -19,6 +21,9 @@ function ObservationDetail() {
     const [loadPractitioner, setLoadPractitioner] =useState(false);
     const [loadPatient, setLoadPatient] = useState(false);
     const [loadEncounter, setLoadEncounter] =useState(false);
+    const handleOpenEdit = () => setOpenEdit(true);
+    const handleCloseEdit= () =>setOpenEdit(false);
+    const [openEdit, setOpenEdit] = useState(false);
 
     const statusColors = {
         final: 'bg-green-100 text-green-700',
@@ -129,7 +134,9 @@ return (
         </button>
         {/*right side buttons*/}
         <div className = "flex items-center gap-3">
-        <button className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700">
+        <button className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+            onClick = {handleOpenEdit}
+        >
             <EditIcon fontSize="small"/>
             Edit Observation
             </button>
@@ -330,6 +337,7 @@ return (
                 </p>
             </div>
         </section>
+            <EditModal open={openEdit} handleClose={handleCloseEdit} resourceType="Observation" resourceId={observationData.id}/>
 
     </div>
 );

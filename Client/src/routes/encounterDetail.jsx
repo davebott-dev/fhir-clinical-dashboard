@@ -8,6 +8,7 @@ import TabPanel from '@mui/lab/TabPanel';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import EditModal from '../components/editModal';
 
 function EncounterDetail() {
     const {patientId, encounterId} = useParams();
@@ -16,7 +17,10 @@ function EncounterDetail() {
     const encounterData = location.state?.encounter || {};
     const [value, setValue] = useState('1');
     const [loading, setLoading] = useState(false);
-    const [practitioner, setPractitioner] = useState({})
+    const [practitioner, setPractitioner] = useState({});
+    const handleOpenEdit = () => setOpenEdit(true);
+    const handleCloseEdit= () =>setOpenEdit(false);
+    const [openEdit, setOpenEdit] = useState(false);
 
     console.log(encounterData);
 
@@ -99,7 +103,9 @@ function EncounterDetail() {
                 Back to Encounters
             </button>
             <div className="ml-auto flex items-center gap-3">
-        <button className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700">
+        <button className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+            onClick = {handleOpenEdit}
+        >
             <EditIcon fontSize="small"/>
             Edit Encounter
             </button>
@@ -351,6 +357,8 @@ function EncounterDetail() {
                 Encounter History Tab
             </TabPanel>
             </TabContext>
+                <EditModal open={openEdit} handleClose={handleCloseEdit} resourceType="Encounter" resourceId={encounterData.id}/>
+
         </div>
     )
 }

@@ -173,7 +173,7 @@ function Navbar() {
                                 }
                                 }}
                         >
-                        <MenuItem onClick={() => { setAnchorEl(null); navigate(`practitioner/account/${practitioner.id}`)}}>View Account</MenuItem>
+                        <MenuItem onClick={() => { setAnchorEl(null); navigate(`practitioner/account/${practitioner.id}`, {state:{practitioner:practitioner} })}}>View Account</MenuItem>
                         <MenuItem onClick={() => { setAnchorEl(null); handleLogOut(); }}>Log Out</MenuItem>
                         </Menu>
                 </div>
