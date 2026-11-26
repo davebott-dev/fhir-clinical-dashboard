@@ -226,9 +226,10 @@ const handlePatientChange = (e) => {
                     break;
                 }
 
-                // Add the other resource mappings here
                 case "Practitioner":
-                    // setPractitionerData(...)
+                    setPractitionerData(
+                        
+                    )
                     break;
 
                 case "Encounter":
@@ -571,13 +572,8 @@ const sectionTitleClass =
                 </div>
 
                 <div>
-                    <label className={labelClass}>Prefix</label>
-                    <input type="text" className={inputClass} placeholder="Dr., Mr., Ms." />
-                </div>
-
-                <div>
-                    <label className={labelClass}>Suffix</label>
-                    <input type="text" className={inputClass} placeholder="MD, DO, NP, etc." />
+                    <label className={labelClass}>Qualification</label>
+                    <input type="text" className={inputClass} placeholder="e.g. Physician" />
                 </div>
 
                 <div>
