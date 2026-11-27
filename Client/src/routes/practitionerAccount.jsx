@@ -65,7 +65,7 @@ function PractitionerAccount() {
                         </div>
 
                         <span className='rounded-full px-3 py-1 text-xs font-semibold bg-green-100 text-green-700'>
-                            Active
+                {practitioner.active ? "Active" : "Inactive"} 
                         </span>
                     </div>
                 </div>
@@ -137,7 +137,7 @@ function PractitionerAccount() {
                  Email
             </p>
             <p className="text-sm font-medium text-slate-800">
-                {practitioner.email || 'Not Provided'}
+                {practitioner.telecom?.[0]?.value || 'Not Provided'}
             </p>
              </div> 
             <div>
@@ -145,17 +145,10 @@ function PractitionerAccount() {
                  Phone Number
             </p>
             <p className="text-sm font-medium text-slate-800">
-                {practitioner.phone || 'Not Provided'}
+                {practitioner.telecom?.[1]?.value || 'Not Provided'}
             </p>
         </div>                             
-            <div>
-            <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">
-                 Address
-            </p>
-            <p className="text-sm font-medium text-slate-800">
-                {practitioner.address || 'Not Provided'}
-            </p>
-        </div>                             
+                           
                         </div>
                     </section>
 
@@ -184,7 +177,7 @@ function PractitionerAccount() {
                 Account Status
             </p>
             <p className="text-sm font-medium text-slate-800">
-                Active 
+                {practitioner.active ? "Active" : "Inactive"} 
             </p>
             </div>         
                         </div>

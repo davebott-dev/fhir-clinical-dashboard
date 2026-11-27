@@ -25,11 +25,10 @@ function EditModal({ open, handleClose, resourceType, resourceId }) {
     const [practitionerData, setPractitionerData] = useState({
     firstName: '',
     lastName: '',
-    prefix: '',
-    suffix: '',
     qualification: '',
     email: '',
     phone: '',
+    gender: '',
     active: true
 });
 
@@ -166,108 +165,8 @@ const ethnicityOptions = [
     { code: "2186-5", name: "Not Hispanic or Latino" }
 ];
 
-const handlePatientChange = (e) => {
-    const { name, value } = e.target;
-
-    setPatientData(prev => ({
-        ...prev,
-        [name]: value
-    }));
-};
-
-    useEffect(()=> {
-        setLoading(true);
-        const fetchResource = async()=>{
-            try{
-                const response = await fetch(`https://hapi.fhir.org/baseR4/${resourceType}/${resourceId}`);
-                if(!response.ok){
-                    throw new Error (
-                        `error fetching ${resourceType}`
-                    )
-                }
-                const data = await response.json();
-                setResource(data)
-                console.log('data from edit modal', data)
-                  switch (resourceType) {
-                case "Patient": {
-                    const ethnicityExtension = data.extension?.find(
-                        ext => ext.url ===
-                            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity"
-                    );
-
-                    const ethnicityCode = ethnicityExtension?.extension?.find(
-                        ext => ext.url === "ombCategory"
-                    )?.valueCoding?.code;
-
-                    const email = data.telecom?.find(
-                        item => item.system === "email"
-                    )?.value || "";
-
-                    const phone = data.telecom?.find(
-                        item => item.system === "phone"
-                    )?.value || "";
-
-                    setPatientData({
-                        firstName: data.name?.[0]?.given?.[0] || "",
-                        lastName: data.name?.[0]?.family || "",
-                        birthDate: data.birthDate || "",
-                        gender: data.gender || "",
-                        ethnicity: ethnicityCode || "",
-                        preferredLanguage:
-                            data.communication?.[0]?.language?.coding?.[0]?.code || "",
-                        email,
-                        phone,
-                        streetAddress: data.address?.[0]?.line?.[0] || "",
-                        city: data.address?.[0]?.city || "",
-                        state: data.address?.[0]?.state || "",
-                        zipCode: data.address?.[0]?.postalCode || "",
-                        country: data.address?.[0]?.country || "US"
-                    });
-                    break;
-                }
-
-                case "Practitioner":
-                    setPractitionerData(
-                        
-                    )
-                    break;
-
-                case "Encounter":
-                    // setEncounterData(...)
-                    break;
-
-                case "MedicationRequest":
-                    // setMedicationData(...)
-                    break;
-
-                case "Observation":
-                    // setObservationData(...)
-                    break;
-
-                default:
-                    console.warn("Unsupported resource type:", resourceType);
-            }
-            } catch(error) {
-                console.error(`error fetching ${resourceType}`, error);
-            }finally{
-                setLoading(false);
-            }
-        }
-        fetchResource();
-    },[resourceId,resourceType]);
-    
-    const updateResource = async() => {
-        setUpdateLoading(true);
-
-        try{
-            const response = await fetch(`https://hapi.fhir.org/baseR4/${resourceType}/${resourceId}`, {
-                method: "PUT", // patch method to update patient fields
-                headers: {
-                    'Content-Type': 'application/fhir+json'
-
-                },
-                body:JSON.stringify({
-                    ...resource,
+const patientRequestBody = {
+  ...resource,
                     active: true,
                     birthDate: patientData.birthDate,
                     gender: patientData.gender,
@@ -336,11 +235,213 @@ const handlePatientChange = (e) => {
                         ]
                       }]
                     })
+};
+
+const practitionerRequestBody ={
+    ...resource,
+    active:practitionerData.active,
+    gender:practitionerData.gender,
+    resourceType: "Practitioner",
+     name: [
+                {
+                    given: [practitionerData.firstName],
+                        family: practitionerData.lastName,
+                        use: 'official'
+                    }
+            ],
+    qualification:[
+        {
+            code: {
+                coding: [
+                    {
+                        code: practitionerData.qualification,
+                        system: "https://chartr.example/synthetic-workflow"
+                    }
+                ],
+                text: practitionerData.qualification
+            }
+        }
+    ],
+        ...((practitionerData.phone || practitionerData.email) && {
+                      telecom: [
+                        ...(practitionerData.email ? [{
+                            system: 'email',
+                            value: practitionerData.email
+                        }] : []),
+                        ...(practitionerData.phone ? [{
+                          system: "phone",
+                          value:practitionerData.phone,
+                          use: "mobile"
+                        }] : [] )
+                    ]
                 })
+
+
+};
+
+const observationRequestBody = {
+
+};
+
+const encounterRequestBody = {
+
+};
+
+const medicationRequestbody = {
+
+};
+
+const handleResourceChange = (e) => {
+    const { name, value } = e.target;
+
+
+    if (resourceType === "Patient") {
+        setPatientData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    } else if (resourceType === "Practitioner") {
+        setPractitionerData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    } else if (resourceType === "Encounter") {
+        setEncounterData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    } else if (resourceType === "MedicationRequest") {
+        setMedicationData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    } else if (resourceType === "Observation") {
+        setObservationData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    }
+};
+
+    useEffect(()=> {
+        setLoading(true);
+        const fetchResource = async()=>{
+            try{
+                const response = await fetch(`https://hapi.fhir.org/baseR4/${resourceType}/${resourceId}`);
+                if(!response.ok){
+                    throw new Error (
+                        `error fetching ${resourceType}`
+                    )
+                }
+                const data = await response.json();
+                setResource(data)
+                console.log('data from edit modal', data)
+                  switch (resourceType) {
+                case "Patient": {
+                    const ethnicityExtension = data.extension?.find(
+                        ext => ext.url ===
+                            "http://hl7.org/fhir/us/core/StructureDefinition/us-core-ethnicity"
+                    );
+
+                    const ethnicityCode = ethnicityExtension?.extension?.find(
+                        ext => ext.url === "ombCategory"
+                    )?.valueCoding?.code;
+
+                    const email = data.telecom?.find(
+                        item => item.system === "email"
+                    )?.value || "";
+
+                    const phone = data.telecom?.find(
+                        item => item.system === "phone"
+                    )?.value || "";
+
+                    setPatientData({
+                        firstName: data.name?.[0]?.given?.[0] || "",
+                        lastName: data.name?.[0]?.family || "",
+                        birthDate: data.birthDate || "",
+                        gender: data.gender || "",
+                        ethnicity: ethnicityCode || "",
+                        preferredLanguage:
+                            data.communication?.[0]?.language?.coding?.[0]?.code || "",
+                        email,
+                        phone,
+                        streetAddress: data.address?.[0]?.line?.[0] || "",
+                        city: data.address?.[0]?.city || "",
+                        state: data.address?.[0]?.state || "",
+                        zipCode: data.address?.[0]?.postalCode || "",
+                        country: data.address?.[0]?.country || "US"
+                    });
+                    break;
+                }
+
+                case "Practitioner": {
+                    const email = data.telecom?.find(
+                        item => item.system === "email"
+                    )?.value || "";
+
+                    const phone = data.telecom?.find(
+                        item => item.system === "phone"
+                    )?.value || "";
+
+                    setPractitionerData({
+                        firstName: data.name?.[0]?.given?.[0] || "",
+                        lastName: data.name?.[0]?.family || "",
+                        qualification: data.qualification?.[0].code?.text,
+                        email,
+                        phone,
+                        active: data.active,
+                        gender: data.gender
+                    });
+                }
+                    break;
+
+                case "Encounter":
+                    // setEncounterData(...)
+                    break;
+
+                case "MedicationRequest":
+                    // setMedicationData(...)
+                    break;
+
+                case "Observation":
+                    // setObservationData(...)
+                    break;
+
+                default:
+                    console.warn("Unsupported resource type:", resourceType);
+            }
+            } catch(error) {
+                console.error(`error fetching ${resourceType}`, error);
+            }finally{
+                setLoading(false);
+            }
+        }
+        fetchResource();
+    },[resourceId,resourceType]);
+    
+    const updateResource = async() => {
+        setUpdateLoading(true);
+        try{
+            const response = await fetch(`https://hapi.fhir.org/baseR4/${resourceType}/${resourceId}`, {
+                method: "PUT", // patch method to update patient fields
+                headers: {
+                    'Content-Type': 'application/fhir+json'
+
+                },
+                body:JSON.stringify(
+                    resourceType==="Patient"? patientRequestBody:
+                    resourceType==="Practitioner" ? practitionerRequestBody :
+                    resourceType === "Observation" ? observationRequestBody :
+                    resourceType==="MedicationRequest" ? medicationRequestbody :
+                    resourceType ==="Encounter"? encounterRequestBody :
+                    null
+                )
             })
              if(response.ok) {
               const data = await response.json();
               console.log(data);
+                window.location.reload()
+
             } else {
                 throw new Error(`Failed to update patient: ${response.statusText}`);
             }
@@ -349,7 +450,6 @@ const handlePatientChange = (e) => {
             console.error(error);
         } finally {
             setUpdateLoading(false);
-            window.location.reload()
         }
     }
 
@@ -377,7 +477,7 @@ const sectionTitleClass =
                         name ="firstName"
                         placeholder="First name" 
                         value={patientData.firstName}
-                        onChange={handlePatientChange}
+                        onChange={handleResourceChange}
                         />
                 </div>
 
@@ -389,7 +489,7 @@ const sectionTitleClass =
                         name="lastName"
                         placeholder="Last name"
                         value = {patientData.lastName}
-                        onChange={handlePatientChange}
+                        onChange={handleResourceChange}
                         />
                 </div>
 
@@ -400,7 +500,7 @@ const sectionTitleClass =
                         className={inputClass}
                         name="birthDate"
                         value = {patientData.birthDate}
-                        onChange={handlePatientChange}
+                        onChange={handleResourceChange}
                     />
                 </div>
 
@@ -410,7 +510,7 @@ const sectionTitleClass =
                         className={inputClass} 
                         value ={patientData.gender}
                         name="gender"
-                        onChange={handlePatientChange}
+                        onChange={handleResourceChange}
                         >
                         <option value="">Select gender</option>
                         <option value="male">Male</option>
@@ -426,7 +526,7 @@ const sectionTitleClass =
                         className={inputClass}
                         value={patientData.ethnicity}
                         name="ethnicity"
-                        onChange={handlePatientChange}
+                        onChange={handleResourceChange}
                         >
                         <option value="">Select ethnicity</option>
                         <option value="2135-2">Hispanic or Latino</option>
@@ -441,7 +541,7 @@ const sectionTitleClass =
                         name = "preferredLanguage"
                         placeholder="Preferred language"
                         value ={patientData.preferredLanguage}
-                        onChange={handlePatientChange}
+                        onChange={handleResourceChange}
                     >   
                         <option value="">Select a Language</option>
                         {languageOptions.map((language) => {
@@ -466,7 +566,7 @@ const sectionTitleClass =
                         name="email"
                         placeholder="Email address"
                         value ={patientData.email}
-                        onChange={handlePatientChange}
+                        onChange={handleResourceChange}
                         />
                 </div>
 
@@ -478,7 +578,7 @@ const sectionTitleClass =
                         name ="phone"
                         placeholder="Phone number"
                         value = {patientData.phone}
-                        onChange={handlePatientChange}
+                        onChange={handleResourceChange}
                         />
                 </div>
             </div>
@@ -494,7 +594,7 @@ const sectionTitleClass =
                         name = "streetAddress"
                         placeholder="Street address"
                         value = {patientData.streetAddress}
-                        onChange={handlePatientChange}
+                        onChange={handleResourceChange}
                         />
                 </div>
 
@@ -506,7 +606,7 @@ const sectionTitleClass =
                         name = "city"
                         placeholder="City"
                         value = {patientData.city}
-                        onChange={handlePatientChange}
+                        onChange={handleResourceChange}
                         />
                 </div>
 
@@ -516,7 +616,7 @@ const sectionTitleClass =
                         className={inputClass} 
                         name = "state"
                         value={patientData.state}
-                        onChange={handlePatientChange}
+                        onChange={handleResourceChange}
                         >
                     <option value="">Select a State</option>
                     {usStates.map((state)=> {
@@ -537,7 +637,7 @@ const sectionTitleClass =
                         name = "zipCode"
                         placeholder="ZIP code"
                         value = {patientData.zipCode}
-                        onChange={handlePatientChange}
+                        onChange={handleResourceChange}
                         />
                 </div>
 
@@ -549,7 +649,7 @@ const sectionTitleClass =
                         className={inputClass} 
                         placeholder="Country"
                         value ={patientData.country}
-                        onChange={handlePatientChange}
+                        onChange={handleResourceChange}
                         />
                 </div>
             </div>
@@ -563,34 +663,89 @@ const sectionTitleClass =
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <div>
                     <label className={labelClass}>First Name</label>
-                    <input type="text" className={inputClass} placeholder="First name" />
+                    <input 
+                        type="text"
+                         className={inputClass}
+                          placeholder="First name"
+                          value ={practitionerData.firstName}
+                          name="firstName"
+                          onChange={handleResourceChange}
+                          />
                 </div>
 
                 <div>
                     <label className={labelClass}>Last Name</label>
-                    <input type="text" className={inputClass} placeholder="Last name" />
+                    <input 
+                        type="text" 
+                        className={inputClass} 
+                        placeholder="Last name"
+                        value = {practitionerData.lastName}
+                        name ="lastName"
+                        onChange={handleResourceChange}
+                        />
                 </div>
 
                 <div>
                     <label className={labelClass}>Qualification</label>
-                    <input type="text" className={inputClass} placeholder="e.g. Physician" />
+                    <input 
+                        type="text" 
+                        className={inputClass} 
+                        placeholder="e.g. Physician"
+                        value ={practitionerData.qualification}
+                        name = "qualification"
+                        onChange={handleResourceChange}
+                        />
                 </div>
 
                 <div>
                     <label className={labelClass}>Email</label>
-                    <input type="email" className={inputClass} placeholder="Email address" />
+                    <input 
+                        type="email" 
+                        className={inputClass}
+                        placeholder="Email address"
+                        value = {practitionerData.email}
+                        name = "email"
+                        onChange={handleResourceChange}
+                        />
                 </div>
 
                 <div>
                     <label className={labelClass}>Phone Number</label>
-                    <input type="tel" className={inputClass} placeholder="Phone number" />
+                    <input 
+                        type="tel" 
+                        className={inputClass} 
+                        placeholder="Phone number"
+                        value = {practitionerData.phone}
+                        name = "phone"
+                        onChange={handleResourceChange}
+                        />
                 </div>
 
                 <div>
                     <label className={labelClass}>Active Status</label>
-                    <select className={inputClass}>
+                    <select 
+                        className={inputClass} 
+                        value = {practitionerData.active}
+                        name = "active"
+                        onChange={handleResourceChange}
+                        >
                         <option value="true">Active</option>
                         <option value="false">Inactive</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label className={labelClass}>Gender</label>
+                    <select 
+                        className={inputClass} 
+                        value = {practitionerData.gender}
+                        name = "gender"
+                        onChange={handleResourceChange}
+                        >
+                        <option value ="">Select a Gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value ="other">Other</option>
                     </select>
                 </div>
             </div>
