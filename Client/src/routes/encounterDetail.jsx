@@ -14,7 +14,9 @@ function EncounterDetail() {
     const {patientId, encounterId} = useParams();
     const location = useLocation();
     const navigate = useNavigate();
-    const encounterData = location.state?.encounter || {};
+    const [encounterData,setEncounterData] = useState(
+        location.state?.encounter || {}
+    );
     const [value, setValue] = useState('1');
     const [loading, setLoading] = useState(false);
     const [practitioner, setPractitioner] = useState({});
@@ -27,6 +29,25 @@ function EncounterDetail() {
     const handleChange = (event, newValue) => {
         setValue(newValue);
     };
+
+    useEffect(() => {
+        const fetchEncounter = async() => {
+            try{
+                setLoading(true);
+                const response = await fetch( `https://hapi.fhir.org/baseR4/Encounter/${encounterId}`)
+                if(!response.ok) {
+                    throw new Error('unable to fetch encounter');
+                }
+                const data = await response.json();
+                setEncounterData(data);
+            }catch(error) {
+                console.error(error)
+            }finally{
+                setLoading(false);
+            }
+        }
+        fetchEncounter();
+    }, [encounterId])
 
     useEffect(()=> {
         if(!encounterData?.participant) return;
@@ -54,7 +75,7 @@ function EncounterDetail() {
       }
     };
     fetchData();
-    },[]);
+    },[encounterData]);
 
     const handleDeleteEncounter= async() => {
       if (window.confirm('Are you sure you want to delete this encounter?')) {

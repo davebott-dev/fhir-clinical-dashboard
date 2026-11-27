@@ -1,11 +1,18 @@
 import {useState,useEffect} from 'react';
 import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
+import { DataGrid, useGridApiRef } from '@mui/x-data-grid'; // implementation docs at https://mui.com/x/react-data-grid/
 
 function EditModal({ open, handleClose, resourceType, resourceId }) {
     const [resource, setResource] = useState({});
     const [loading,setLoading] =useState(false);
     const [updateLoading, setUpdateLoading] =useState(false);
+    const [practitioners, setPractitioners] = useState([]);
+    const [loadPractitioners, setLoadPractitioners] = useState(false);
+    const [practitionerRows, setPractitionerRows] = useState([]);
+    const [selectedParticipants, setSelectedParticipants] = useState([]);
+    const apiRef = useGridApiRef();
+
     // initialize update objects for each
     const [patientData, setPatientData] = useState({
         firstName: '',
@@ -40,7 +47,8 @@ const [encounterData, setEncounterData] = useState({
     startDate: '',
     endDate: '',
     reason: '',
-    location: ''
+    subject: '',
+    participants: []
 });
 
 const [medicationData, setMedicationData] = useState({
@@ -165,6 +173,44 @@ const ethnicityOptions = [
     { code: "2186-5", name: "Not Hispanic or Latino" }
 ];
 
+const encounterClasses = [
+    { code: 'AMB', display: 'Ambulatory' },
+    { code: 'IMP', display: 'Inpatient' },
+    { code: 'OBSENC', display: 'Observation' },
+    { code: 'EMER', display: 'Emergency' },
+    { code: 'VR', display: 'Virtual' },
+    { code: 'HH', display: 'Home Health' },
+];
+
+const participantColumns = [
+    {
+        field: 'name',
+        headerName: 'Participant',
+        flex: 1,
+    },
+    {
+        field: 'qualification',
+        headerName: 'Qualification',
+        flex: 1,
+    },
+    {
+        field: 'role',
+        headerName: 'Participant Role',
+        type: 'singleSelect',
+        flex: 1, 
+        editable: true,
+        cellClassName: 'editable-role-cell',
+        valueOptions: [
+            { value: 'PPRF', label: 'Primary performer' },
+            { value: 'SPRF', label: 'Secondary performer' },
+            { value: 'ATND', label: 'Attender' },
+            { value: 'CON', label: 'Consultant' },
+            { value: 'PART', label: 'Participant' },
+            { value: 'REF', label: 'Referrer' }
+        ]
+    }
+];
+
 const patientRequestBody = {
   ...resource,
                     active: true,
@@ -284,7 +330,60 @@ const observationRequestBody = {
 };
 
 const encounterRequestBody = {
+    ...resource,
+        resourceType: 'Encounter',
+        status: encounterData.status,
+        class: {
+            system: 'http://terminology.hl7.org/CodeSystem/v3-ActCode',
+            code: encounterData.encounterClass,
+            display: encounterClasses.find(item=> item.code ===encounterData.encounterClass)?.display
+                },
 
+                    ...(encounterData.serviceType && {
+    type: [{
+        text: encounterData.serviceType
+    }]
+}),
+
+                    subject: {
+                        reference: encounterData.subject
+                    },
+
+                    period: {
+                        ...(encounterData.startDate && {
+                            start: new Date(encounterData.startDate).toISOString()
+                        }),
+                        ...(encounterData.endDate && {
+                            end: new Date(encounterData.endDate).toISOString()
+                        })
+                    },
+
+                    reasonCode: encounterData.reason
+                        ? [{ text: encounterData.reason }]
+                        : [],
+
+                    ...(encounterData.serviceProvider && {
+                            serviceProvider: {
+                                display: encounterData.serviceProvider 
+                            }
+                        }),
+
+                    participant: selectedParticipants.map(participant => ({
+        type: [
+            {
+                coding: [
+                    {
+                        system: "http://terminology.hl7.org/CodeSystem/v3-ParticipationType",
+                        code: participant.role || "PART"
+                    }
+                ]
+            }
+        ],
+                        individual: {
+                            reference: `Practitioner/${participant.id}`,
+                            display: participant.name
+                        }
+                    }))
 };
 
 const medicationRequestbody = {
@@ -322,6 +421,38 @@ const handleResourceChange = (e) => {
         }));
     }
 };
+
+    useEffect(()=> {
+        setLoadPractitioners(true);
+        const fetchProviders = async()=>{
+            try{
+                const response = await fetch('https://hapi.fhir.org/baseR4/Practitioner');
+                if(!response.ok){
+                    throw new Error (
+                        'error fetching practitioners'
+                    )
+                }
+                const data = await response.json();
+                setPractitioners(data.entry)
+
+                 //create the data table rows
+                const formattedRows = data?.entry?.filter((item)=>item.resource?.name?.[0]?.given[0]).map((el,index)=>({
+                    id: el.resource.id,
+                    name: `${el.resource?.name?.[0]?.given[0]} ${el.resource?.name?.[0]?.family}` || 'N/A',
+                    qualification: el.resource?.qualification?.[0]?.code?.coding?.[0]?.code ||'N/A'
+                    
+                }));
+                console.log(data)
+                console.log(formattedRows)
+                setPractitionerRows(formattedRows)
+            } catch(error) {
+                console.error('error fetching providers', error);
+            }finally{
+                setLoadPractitioners(false);
+            }
+        }
+        fetchProviders();
+    },[])
 
     useEffect(()=> {
         setLoading(true);
@@ -395,9 +526,34 @@ const handleResourceChange = (e) => {
                 }
                     break;
 
-                case "Encounter":
-                    // setEncounterData(...)
-                    break;
+                case "Encounter": {
+    const participants = (data.participant || []).map((participant) => {
+        const participantId =
+            participant.individual?.reference?.split("/").pop();
+
+        return {
+            id: participantId,
+            name: participant.individual?.display || "",
+            role: participant.type?.[0]?.coding?.[0]?.code || "PART"
+        };
+    });
+
+    setSelectedParticipants(participants);
+
+    setEncounterData({
+        status: data.status || "",
+        encounterClass: data.class?.code || "",
+        serviceType: data.type?.[0]?.text || "",
+        serviceProvider: data.serviceProvider?.display || "",
+        startDate: toDateTimeLocal(data.period?.start),
+        endDate: toDateTimeLocal(data.period?.end),
+        reason: data.reasonCode?.[0]?.text || "",
+        participants: data.participant || [],
+        subject: data.subject?.reference || ""
+    });
+}
+
+    break;
 
                 case "MedicationRequest":
                     // setMedicationData(...)
@@ -451,7 +607,18 @@ const handleResourceChange = (e) => {
         } finally {
             setUpdateLoading(false);
         }
-    }
+    };
+
+    const toDateTimeLocal = (dateString) => {
+    if (!dateString) return "";
+
+    const date = new Date(dateString);
+    const offset = date.getTimezoneOffset();
+
+    return new Date(date.getTime() - offset * 60000)
+        .toISOString()
+        .slice(0, 16);
+};
 
 // tailwind css generated with help of GenAI
 const inputClass =
@@ -756,24 +923,34 @@ const sectionTitleClass =
         <>
             <h3 className={sectionTitleClass}>Encounter Information</h3>
 
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
                 <div>
                     <label className={labelClass}>Status</label>
-                    <select className={inputClass}>
+                    <select     
+                        className={inputClass} 
+                        name="status"
+                        value = {encounterData.status}
+                        onChange={handleResourceChange}
+                        >
                         <option value="">Select status</option>
-                        <option value="planned">Planned</option>
-                        <option value="arrived">Arrived</option>
-                        <option value="triaged">Triaged</option>
-                        <option value="in-progress">In Progress</option>
-                        <option value="onleave">On Leave</option>
-                        <option value="finished">Finished</option>
-                        <option value="cancelled">Cancelled</option>
+                       <option value="planned">Planned</option>
+<option value="in-progress">In Progress</option>
+<option value="onleave">On Leave</option>
+<option value="finished">Finished</option>
+<option value="cancelled">Cancelled</option>
+<option value="entered-in-error">Entered in Error</option>
+<option value="unknown">Unknown</option>
                     </select>
                 </div>
 
                 <div>
                     <label className={labelClass}>Class</label>
-                    <select className={inputClass}>
+                    <select 
+                        className={inputClass}
+                        name = "encounterClass"
+                        value = {encounterData.encounterClass}
+                        onChange ={handleResourceChange}
+                        >
                         <option value="">Select class</option>
                         <option value="AMB">Ambulatory</option>
                         <option value="EMER">Emergency</option>
@@ -784,34 +961,145 @@ const sectionTitleClass =
 
                 <div>
                     <label className={labelClass}>Service Type</label>
-                    <input type="text" className={inputClass} placeholder="Service type" />
+                    <input 
+                        type="text"
+                        className={inputClass}
+                        placeholder="Service type"
+                        name = "serviceType"
+                        value ={encounterData.serviceType}
+                        onChange = {handleResourceChange}
+                        />
                 </div>
 
                 <div>
                     <label className={labelClass}>Service Provider</label>
-                    <input type="text" className={inputClass} placeholder="Organization" />
+                    <input 
+                        type="text" 
+                        className={inputClass}
+                        placeholder="Organization"
+                        name = "serviceProvider"
+                        value = {encounterData.serviceProvider}
+                        onChange={handleResourceChange}
+                        />
                 </div>
 
                 <div>
                     <label className={labelClass}>Start Date/Time</label>
-                    <input type="datetime-local" className={inputClass} />
+                    <input 
+                        type="datetime-local"
+                        className={inputClass}
+                        name = "startDate"
+                        value = {encounterData.startDate}
+                        onChange ={handleResourceChange}
+                        />
                 </div>
 
                 <div>
                     <label className={labelClass}>End Date/Time</label>
-                    <input type="datetime-local" className={inputClass} />
+                    <input 
+                        type="datetime-local"
+                        className={inputClass}
+                        name ="endDate"
+                        value = {encounterData.endDate}
+                        onChange ={handleResourceChange} 
+                         />
                 </div>
 
-                <div>
-                    <label className={labelClass}>Reason</label>
-                    <input type="text" className={inputClass} placeholder="Reason for encounter" />
-                </div>
-
-                <div>
-                    <label className={labelClass}>Location</label>
-                    <input type="text" className={inputClass} placeholder="Location" />
-                </div>
+                
             </div>
+            <div className="mt-6 w-full">
+                    <label className={labelClass}>Reason</label>
+                    <textarea 
+                        type="text" 
+                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                        placeholder="Reason for encounter"
+                        name = "reason"
+                        value = {encounterData.reason}
+                        onChange ={handleResourceChange}
+                        />
+                </div>
+
+                  <div className="mb-4">
+
+    <div className="mt-4 w-full">
+    <h3 className="text-base font-semibold text-slate-900">
+      Encounter Participants
+    </h3>
+    <p className="mt-1 text-sm text-slate-500">
+      Select practitioners and assign their roles.
+    </p>
+  </div>
+  <div className="w-full min-w-0 overflow-hidden rounded-xl border border-slate-200">
+                            <Box sx={{height:300, width:'100%',mt:3}}>
+                                <DataGrid
+                                apiRef={apiRef}
+                                editMode="cell"
+                                onCellClick={(params) => {
+                                    if (params.field === 'role') {
+                                        apiRef.current.startCellEditMode({
+                                            id: params.id,
+                                            field: 'role'
+                                        });
+                                    }
+                                }}
+                                rows={practitionerRows}
+    columns={participantColumns}
+    checkboxSelection
+    rowSelectionModel={{
+        type: "include",
+        ids: new Set(selectedParticipants.map((p) => p.id))
+    }}
+  onRowSelectionModelChange={(newSelection) => {
+    const selectedIds = newSelection.ids;
+
+    setSelectedParticipants((previous) => {
+        const existingParticipants = new Map(
+            previous.map((p) => [p.id, p])
+        );
+
+        return practitionerRows
+            .filter((row) => selectedIds.has(row.id))
+            .map((row) => ({
+                ...row,
+                role: existingParticipants.get(row.id)?.role || "PART"
+            }));
+    });
+}}
+    processRowUpdate={(updatedRow) => {
+    setSelectedParticipants((previous) =>
+        previous.map((participant) =>
+            participant.id === updatedRow.id
+                ? { ...participant, role: updatedRow.role }
+                : participant
+        )
+    );
+
+    return updatedRow;
+}}
+                        sx={{
+                            border: 0,
+                            "& .MuiDataGrid-columnHeaders": {
+                                backgroundColor: "#f8fafc"
+                            },
+                            "& .MuiDataGrid-columnHeaderTitle": {
+                                fontWeight: 600
+                            },
+                            "& .editable-role-cell": {
+                                backgroundColor: "#f8fafc",
+                                color: "#4338ca",
+                                fontWeight: 500,
+                                cursor: "pointer",
+                                borderBottom: "1px dashed #a5b4fc"
+                            },
+                            "& .editable-role-cell:hover": {
+                                backgroundColor: "#eef2ff"
+                            }
+                        }}
+                                loading = {loadPractitioners}
+                                />
+                            </Box>
+                                </div>
+                </div>
         </>
     );
 
