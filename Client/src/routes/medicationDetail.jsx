@@ -19,8 +19,28 @@ function MedicationDetail() {
     const handleOpenEdit = () => setOpenEdit(true);
     const handleCloseEdit= () =>setOpenEdit(false);
     const [openEdit, setOpenEdit] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     console.log(medicationData);
+
+    useEffect(() => {
+        const fetchMedication = async() => {
+            try{
+                setLoading(true);
+                const response = await fetch( `https://hapi.fhir.org/baseR4/MedicationRequest/${medicationRequestId}`)
+                if(!response.ok) {
+                    throw new Error('unable to fetch medication request');
+                }
+                const data = await response.json();
+                setMedicationData(data);
+            }catch(error) {
+                console.error(error)
+            }finally{
+                setLoading(false);
+            }
+        }
+        fetchMedication();
+    }, [medicationRequestId]);
 
     useEffect(()=> {
         setLoadPractitioner(true);

@@ -35,6 +35,25 @@ function ObservationDetail() {
         cancelled: 'bg-red-100 text-red-700'
     };
 
+    useEffect(() => {
+        const fetchObservation = async() => {
+            try{
+                setLoading(true);
+                const response = await fetch( `https://hapi.fhir.org/baseR4/Observation/${observationId}`)
+                if(!response.ok) {
+                    throw new Error('unable to fetch observation');
+                }
+                const data = await response.json();
+                setObservationData(data);
+            }catch(error) {
+                console.error(error)
+            }finally{
+                setLoading(false);
+            }
+        }
+        fetchObservation();
+    }, [observationId])
+
         useEffect(()=> {
         setLoadPractitioner(true);
         const fetchProvider = async()=>{
