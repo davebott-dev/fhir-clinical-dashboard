@@ -355,7 +355,11 @@ function MedicationList() {
     </section>
     </>
       <MedicationModal open={open} handleClose={handleClose} patientId={patient?.id} onMedicationCreated={handleCreatedMedication}/>
-      <EditModal open={openEdit} handleClose={handleCloseEdit} resourceType="MedicationRequest" resourceId={selectedMedication}/>
+      <EditModal open={openEdit} handleClose={handleCloseEdit} resourceType="MedicationRequest" resourceId={selectedMedication}
+        onUpdate={(updatedMedication)=>{
+          setSelectedMedication(updatedMedication)
+        }}
+      />
 
     </main>
   );

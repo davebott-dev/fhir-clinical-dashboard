@@ -325,7 +325,11 @@ function EncounterHistory() {
     </section>
     </>
       <EncounterModal open={open} handleClose={handleClose} patientId={patient?.id} onEncounterCreated={handleCreatedEncounter}/>
-      <EditModal open={openEdit} handleClose={handleCloseEdit} resourceType="Encounter" resourceId={selectedEncounter}/>
+      <EditModal open={openEdit} handleClose={handleCloseEdit} resourceType="Encounter" resourceId={selectedEncounter}
+        onUpdate={(updatedEncounter)=>{
+          setSelectedEncounter(updatedEncounter)
+        }}
+      />
 
     </main>
   );

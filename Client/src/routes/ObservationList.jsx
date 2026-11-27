@@ -328,7 +328,11 @@ function ObservationList() {
     </section>
     </>
           <ObservationModal open={open} handleClose={handleClose} patientId={patient?.id} onObservationCreated={handleCreatedObservation}/>
-          <EditModal open={openEdit} handleClose={handleCloseEdit} resourceType="Observation" resourceId={selectedObservation}/>
+          <EditModal open={openEdit} handleClose={handleCloseEdit} resourceType="Observation" resourceId={selectedObservation}
+            onUpdate={(updatedObservation)=>{
+              setSelectedObservation(updatedObservation)
+            }}
+          />
 
     </main>
   );

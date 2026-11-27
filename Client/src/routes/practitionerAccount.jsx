@@ -7,7 +7,9 @@ function PractitionerAccount() {
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
-    const practitioner = location.state?.practitioner || {};
+    const [practitioner,setPractitioner] = useState(
+        location.state?.practitioner || {}
+    );
     const handleOpenEdit = () => setOpenEdit(true);
     const handleCloseEdit= () =>setOpenEdit(false);
     const [openEdit, setOpenEdit] = useState(false);
@@ -184,7 +186,9 @@ function PractitionerAccount() {
                     </section>
                 </div>
             </div>
-                <EditModal open={openEdit} handleClose={handleCloseEdit} resourceType="Practitioner" resourceId={practitioner.id}/>
+                <EditModal open={openEdit} handleClose={handleCloseEdit} resourceType="Practitioner" resourceId={practitioner.id}
+                    onUpdate={(updatedPractitioner)=>setPractitioner(updatedPractitioner)}
+                />
 
         </div>
     );

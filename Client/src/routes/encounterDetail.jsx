@@ -378,7 +378,11 @@ function EncounterDetail() {
                 Encounter History Tab
             </TabPanel>
             </TabContext>
-                <EditModal open={openEdit} handleClose={handleCloseEdit} resourceType="Encounter" resourceId={encounterData.id}/>
+                <EditModal open={openEdit} handleClose={handleCloseEdit} resourceType="Encounter" resourceId={encounterData.id}
+                    onUpdate={(updatedObservation)=>{
+                        setEncounterData(updatedObservation)
+                    }}
+                />
 
         </div>
     )

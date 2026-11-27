@@ -14,7 +14,9 @@ function ObservationDetail() {
     const navigate = useNavigate();
     const location = useLocation();
     const [loading, setLoading] = useState(false);
-    const observationData = location.state?.observation || {};
+    const [observationData,setObservationData] = useState(
+        location.state?.observation || {}
+    );
     const [practitioner, setPractitioner] = useState([]);
     const [patient,setPatient] = useState([]);
     const [encounter,setEncounter]= useState([]);
@@ -337,7 +339,11 @@ return (
                 </p>
             </div>
         </section>
-            <EditModal open={openEdit} handleClose={handleCloseEdit} resourceType="Observation" resourceId={observationData.id}/>
+            <EditModal open={openEdit} handleClose={handleCloseEdit} resourceType="Observation" resourceId={observationData.id}
+                onUpdate={(updatedObservation)=> {
+                    setObservationData(updatedObservation)
+                }}
+            />
 
     </div>
 );

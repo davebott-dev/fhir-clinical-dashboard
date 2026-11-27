@@ -181,7 +181,11 @@ function PatientLayout() {
   <AddCommentIcon />
 </IconButton>
           <NotesModal open={openModal} handleClose={handleCloseModal} patientId={patientId} />
-          <EditModal open={openEdit} handleClose={handleCloseEdit} resourceType="Patient" resourceId={patientId}/>
+          <EditModal open={openEdit} handleClose={handleCloseEdit} resourceType="Patient" resourceId={patientId}
+            onUpdate={(updatedPatient)=> {
+              setPatient(updatedPatient)
+            }}
+          />
     </main>
   );
 }

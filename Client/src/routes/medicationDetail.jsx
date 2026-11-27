@@ -10,7 +10,9 @@ import EditModal from '../components/editModal';
 function MedicationDetail() {
     const {patientId,medicationRequestId} = useParams();
     const location = useLocation();
-    const medicationData = location.state?.medication || {};
+    const [medicationData,setMedicationData] = useState(
+        location.state?.medication || {}
+    );
     const navigate = useNavigate();
     const [loadPractitioner,setLoadPractitioner]=useState(false);
     const [practitioner,setPractitioner]=useState({});
@@ -344,7 +346,11 @@ function MedicationDetail() {
 
                 </div>
             </div>
-                <EditModal open={openEdit} handleClose={handleCloseEdit} resourceType="MedicationRequest" resourceId={medicationData.id}/>
+                <EditModal open={openEdit} handleClose={handleCloseEdit} resourceType="MedicationRequest" resourceId={medicationData.id}
+                    onUpdate={(updatedMedication)=> {
+                        setMedicationData(updatedMedication)
+                    }}
+                />
 
         </div>
     );
