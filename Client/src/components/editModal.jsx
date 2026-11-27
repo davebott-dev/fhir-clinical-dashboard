@@ -3,7 +3,7 @@ import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
 import { DataGrid, useGridApiRef } from '@mui/x-data-grid'; // implementation docs at https://mui.com/x/react-data-grid/
 
-function EditModal({ open, handleClose, resourceType, resourceId }) {
+function EditModal({ open, handleClose, resourceType, resourceId, onUpdate }) {
     const [resource, setResource] = useState({});
     const [loading,setLoading] =useState(false);
     const [updateLoading, setUpdateLoading] =useState(false);
@@ -326,7 +326,98 @@ const practitionerRequestBody ={
 };
 
 const observationRequestBody = {
+    ...resource,
+    resourceType: "Observation",
 
+    status: observationData.status,
+
+    code: {
+        ...resource.code,
+        coding: [
+            {
+                ...(resource.code?.coding?.[0] || {}),
+                system: "http://loinc.org",
+                code: observationData.loincCode,
+                display: observationData.name
+            }
+        ],
+        text: observationData.name
+    },
+
+    category: observationData.category
+        ? [
+            {
+                ...(resource.category?.[0] || {}),
+                coding: [
+                    {
+                        ...(resource.category?.[0]?.coding?.[0] || {}),
+                        system: "http://terminology.hl7.org/CodeSystem/observation-category",
+                        code: observationData.category,
+                        display: observationData.category
+                    }
+                ]
+            }
+        ]
+        : resource.category || [],
+
+    effectiveDateTime: observationData.date
+        ? new Date(observationData.date).toISOString()
+        : resource.effectiveDateTime,
+
+    valueQuantity: {
+        ...(resource.valueQuantity || {}),
+        value: Number(observationData.value),
+        unit: observationData.unit
+    },
+
+    ...(observationData.interpretation && {
+        interpretation: [
+            {
+                ...(resource.interpretation?.[0] || {}),
+                coding: [
+                    {
+                        ...(resource.interpretation?.[0]?.coding?.[0] || {}),
+                        system: "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+                        code: observationData.interpretation
+                    }
+                ]
+            }
+        ]
+    }),
+
+    ...(observationData.referenceRangeLow !== "" ||
+    observationData.referenceRangeHigh !== "" ? {
+        referenceRange: [
+            {
+                ...(resource.referenceRange?.[0] || {}),
+                ...(observationData.referenceRangeLow !== "" && {
+                    low: {
+                        ...(resource.referenceRange?.[0]?.low || {}),
+                        value: Number(observationData.referenceRangeLow),
+                        unit: observationData.unit
+                    }
+                }),
+                ...(observationData.referenceRangeHigh !== "" && {
+                    high: {
+                        ...(resource.referenceRange?.[0]?.high || {}),
+                        value: Number(observationData.referenceRangeHigh),
+                        unit: observationData.unit
+                    }
+                })
+            }
+        ]
+    } : {
+        referenceRange: resource.referenceRange
+    }),
+
+    note: observationData.notes.trim()
+        ? [
+            {
+                ...(resource.note?.[0] || {}),
+                text: observationData.notes
+            }
+        ]
+        : []
 };
 
 const encounterRequestBody = {
@@ -387,12 +478,77 @@ const encounterRequestBody = {
 };
 
 const medicationRequestbody = {
+    ...resource,
+    resourceType: "MedicationRequest",
 
+    status: medicationData.status,
+    priority: medicationData.priority,
+
+    medicationCodeableConcept: {
+        ...(resource.medicationCodeableConcept || {}),
+        text: medicationData.medicationName
+    },
+
+    dosageInstruction: [
+        {
+            ...(resource.dosageInstruction?.[0] || {}),
+            text: medicationData.frequency,
+
+            route: {
+                ...(resource.dosageInstruction?.[0]?.route || {}),
+                text: medicationData.route
+            },
+
+            doseAndRate: [
+                {
+                    ...(resource.dosageInstruction?.[0]?.doseAndRate?.[0] || {}),
+                    doseQuantity: {
+                        ...(resource.dosageInstruction?.[0]?.doseAndRate?.[0]?.doseQuantity || {}),
+                        value: Number(medicationData.dose),
+                        unit: medicationData.doseUnit
+                    }
+                }
+            ]
+        }
+    ],
+
+    dispenseRequest: {
+        ...(resource.dispenseRequest || {}),
+
+        ...(medicationData.quantity !== "" && {
+            quantity: {
+                ...(resource.dispenseRequest?.quantity || {}),
+                value: Number(medicationData.quantity)
+            }
+        }),
+
+        ...(medicationData.refills !== "" && {
+            numberOfRepeatsAllowed: Number(medicationData.refills)
+        }),
+
+        validityPeriod: {
+            ...(resource.dispenseRequest?.validityPeriod || {}),
+            ...(medicationData.validFrom && {
+                start: medicationData.validFrom
+            }),
+            ...(medicationData.validUntil && {
+                end: medicationData.validUntil
+            })
+        }
+    },
+
+    reasonCode: medicationData.reason
+        ? [
+            {
+                ...(resource.reasonCode?.[0] || {}),
+                text: medicationData.reason
+            }
+        ]
+        : []
 };
 
 const handleResourceChange = (e) => {
     const { name, value } = e.target;
-
 
     if (resourceType === "Patient") {
         setPatientData(prev => ({
@@ -402,7 +558,7 @@ const handleResourceChange = (e) => {
     } else if (resourceType === "Practitioner") {
         setPractitionerData(prev => ({
             ...prev,
-            [name]: value
+            [name]: name === "active" ? value === "true" : value
         }));
     } else if (resourceType === "Encounter") {
         setEncounterData(prev => ({
@@ -555,9 +711,54 @@ const handleResourceChange = (e) => {
 
     break;
 
-                case "MedicationRequest":
-                    // setMedicationData(...)
-                    break;
+                case "MedicationRequest": {
+    const dosage = data.dosageInstruction?.[0] || {};
+    const doseQuantity = dosage.doseAndRate?.[0]?.doseQuantity;
+    const dispense = data.dispenseRequest || {};
+
+    setMedicationData({
+        medicationName: data.medicationCodeableConcept?.text ||
+            data.medicationCodeableConcept?.coding?.[0]?.display || "",
+        status: data.status || "",
+        priority: data.priority || "",
+        dose: doseQuantity?.value ?? "",
+        doseUnit: doseQuantity?.unit || "",
+        route: dosage.route?.text ||
+            dosage.route?.coding?.[0]?.display || "",
+        frequency: dosage.text || "",
+        quantity: dispense.quantity?.value ?? "",
+        refills: dispense.numberOfRepeatsAllowed ?? "",
+        validFrom: dispense.validityPeriod?.start?.slice(0, 10) || "",
+        validUntil: dispense.validityPeriod?.end?.slice(0, 10) || "",
+        reason: data.reasonCode?.[0]?.text || ""
+    });
+
+    break;
+}
+
+case "Observation": {
+    const quantity = data.valueQuantity || {};
+    const interpretation = data.interpretation?.[0]?.coding?.[0]?.code || "";
+
+    setObservationData({
+        name: data.code?.text ||
+            data.code?.coding?.[0]?.display || "",
+        loincCode: data.code?.coding?.find(
+            item => item.system === "http://loinc.org"
+        )?.code || "",
+        category: data.category?.[0]?.coding?.[0]?.code || "",
+        status: data.status || "",
+        date: toDateTimeLocal(data.effectiveDateTime),
+        value: quantity.value ?? "",
+        unit: quantity.unit || "",
+        interpretation,
+        referenceRangeLow: data.referenceRange?.[0]?.low?.value ?? "",
+        referenceRangeHigh: data.referenceRange?.[0]?.high?.value ?? "",
+        notes: data.note?.[0]?.text || ""
+    });
+
+    break;
+}
 
                 case "Observation":
                     // setObservationData(...)
@@ -596,7 +797,8 @@ const handleResourceChange = (e) => {
              if(response.ok) {
               const data = await response.json();
               console.log(data);
-                window.location.reload()
+                onUpdate?.(data);
+                handleClose();
 
             } else {
                 throw new Error(`Failed to update patient: ${response.statusText}`);
@@ -1103,181 +1305,334 @@ const sectionTitleClass =
         </>
     );
 
-    const renderMedicationRequestFields = () => (
-        <>
-            <h3 className={sectionTitleClass}>Medication Information</h3>
+const renderMedicationRequestFields = () => (
+    <>
+        <h3 className={sectionTitleClass}>Medication Information</h3>
 
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                <div className="sm:col-span-2">
-                    <label className={labelClass}>Medication Name</label>
-                    <input type="text" className={inputClass} placeholder="Medication name" />
-                </div>
-
-                <div>
-                    <label className={labelClass}>Status</label>
-                    <select className={inputClass}>
-                        <option value="">Select status</option>
-                        <option value="active">Active</option>
-                        <option value="on-hold">On Hold</option>
-                        <option value="cancelled">Cancelled</option>
-                        <option value="completed">Completed</option>
-                        <option value="stopped">Stopped</option>
-                        <option value="draft">Draft</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label className={labelClass}>Priority</label>
-                    <select className={inputClass}>
-                        <option value="">Select priority</option>
-                        <option value="routine">Routine</option>
-                        <option value="urgent">Urgent</option>
-                        <option value="asap">ASAP</option>
-                        <option value="stat">STAT</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label className={labelClass}>Dose</label>
-                    <input type="number" className={inputClass} placeholder="Dose amount" />
-                </div>
-
-                <div>
-                    <label className={labelClass}>Dose Unit</label>
-                    <input type="text" className={inputClass} placeholder="mg, mL, etc." />
-                </div>
-
-                <div>
-                    <label className={labelClass}>Route</label>
-                    <select className={inputClass}>
-                        <option value="">Select route</option>
-                        <option value="oral">Oral</option>
-                        <option value="intravenous">Intravenous</option>
-                        <option value="intramuscular">Intramuscular</option>
-                        <option value="subcutaneous">Subcutaneous</option>
-                        <option value="topical">Topical</option>
-                        <option value="inhalation">Inhalation</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label className={labelClass}>Frequency</label>
-                    <input type="text" className={inputClass} placeholder="e.g. Twice daily" />
-                </div>
-
-                <div>
-                    <label className={labelClass}>Quantity</label>
-                    <input type="number" className={inputClass} placeholder="Quantity" />
-                </div>
-
-                <div>
-                    <label className={labelClass}>Refills Allowed</label>
-                    <input type="number" className={inputClass} placeholder="Number of refills" />
-                </div>
-
-                <div>
-                    <label className={labelClass}>Valid From</label>
-                    <input type="date" className={inputClass} />
-                </div>
-
-                <div>
-                    <label className={labelClass}>Valid Until</label>
-                    <input type="date" className={inputClass} />
-                </div>
-
-                <div className="sm:col-span-2">
-                    <label className={labelClass}>Reason for Medication</label>
-                    <textarea className={inputClass} rows="3" placeholder="Reason for medication" />
-                </div>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+                <label className={labelClass}>Medication Name</label>
+                <input
+                    type="text"
+                    className={inputClass}
+                    placeholder="Medication name"
+                    name="medicationName"
+                    value={medicationData.medicationName}
+                    onChange={handleResourceChange}
+                />
             </div>
-        </>
-    );
 
-    const renderObservationFields = () => (
-        <>
-            <h3 className={sectionTitleClass}>Observation Information</h3>
-
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                <div className="sm:col-span-2">
-                    <label className={labelClass}>Observation Name</label>
-                    <input type="text" className={inputClass} placeholder="Observation name" />
-                </div>
-
-                <div>
-                    <label className={labelClass}>LOINC Code</label>
-                    <input type="text" className={inputClass} placeholder="e.g. 2093-3" />
-                </div>
-
-                <div>
-                    <label className={labelClass}>Category</label>
-                    <select className={inputClass}>
-                        <option value="">Select category</option>
-                        <option value="laboratory">Laboratory</option>
-                        <option value="vital-signs">Vital Signs</option>
-                        <option value="exam">Exam</option>
-                        <option value="imaging">Imaging</option>
-                        <option value="social-history">Social History</option>
-                        <option value="survey">Survey</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label className={labelClass}>Status</label>
-                    <select className={inputClass}>
-                        <option value="">Select status</option>
-                        <option value="registered">Registered</option>
-                        <option value="preliminary">Preliminary</option>
-                        <option value="final">Final</option>
-                        <option value="amended">Amended</option>
-                        <option value="cancelled">Cancelled</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label className={labelClass}>Observation Date</label>
-                    <input type="datetime-local" className={inputClass} />
-                </div>
-
-                <div>
-                    <label className={labelClass}>Value</label>
-                    <input type="number" step="any" className={inputClass} placeholder="Value" />
-                </div>
-
-                <div>
-                    <label className={labelClass}>Unit</label>
-                    <input type="text" className={inputClass} placeholder="mg/dL, kg, etc." />
-                </div>
-
-                <div>
-                    <label className={labelClass}>Interpretation</label>
-                    <select className={inputClass}>
-                        <option value="">Select interpretation</option>
-                        <option value="N">Normal</option>
-                        <option value="L">Low</option>
-                        <option value="H">High</option>
-                        <option value="LL">Critical Low</option>
-                        <option value="HH">Critical High</option>
-                        <option value="A">Abnormal</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label className={labelClass}>Reference Range Low</label>
-                    <input type="number" step="any" className={inputClass} placeholder="Lower limit" />
-                </div>
-
-                <div>
-                    <label className={labelClass}>Reference Range High</label>
-                    <input type="number" step="any" className={inputClass} placeholder="Upper limit" />
-                </div>
-
-                <div className="sm:col-span-2">
-                    <label className={labelClass}>Notes</label>
-                    <textarea className={inputClass} rows="3" placeholder="Observation notes" />
-                </div>
+            <div>
+                <label className={labelClass}>Status</label>
+                <select
+                    className={inputClass}
+                    name="status"
+                    value={medicationData.status}
+                    onChange={handleResourceChange}
+                >
+                    <option value="">Select status</option>
+                    <option value="active">Active</option>
+                    <option value="on-hold">On Hold</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="completed">Completed</option>
+                    <option value="stopped">Stopped</option>
+                    <option value="draft">Draft</option>
+                </select>
             </div>
-        </>
-    );
+
+            <div>
+                <label className={labelClass}>Priority</label>
+                <select
+                    className={inputClass}
+                    name="priority"
+                    value={medicationData.priority}
+                    onChange={handleResourceChange}
+                >
+                    <option value="">Select priority</option>
+                    <option value="routine">Routine</option>
+                    <option value="urgent">Urgent</option>
+                    <option value="asap">ASAP</option>
+                    <option value="stat">STAT</option>
+                </select>
+            </div>
+
+            <div>
+                <label className={labelClass}>Dose</label>
+                <input
+                    type="number"
+                    step="any"
+                    className={inputClass}
+                    name="dose"
+                    value={medicationData.dose}
+                    onChange={handleResourceChange}
+                    placeholder="Dose amount"
+                />
+            </div>
+
+            <div>
+                <label className={labelClass}>Dose Unit</label>
+                <input
+                    type="text"
+                    className={inputClass}
+                    name="doseUnit"
+                    value={medicationData.doseUnit}
+                    onChange={handleResourceChange}
+                    placeholder="mg, mL, etc."
+                />
+            </div>
+
+            <div>
+                <label className={labelClass}>Route</label>
+                <select
+                    className={inputClass}
+                    name="route"
+                    value={medicationData.route}
+                    onChange={handleResourceChange}
+                >
+                    <option value="">Select route</option>
+                    <option value="oral">Oral</option>
+                    <option value="intravenous">Intravenous</option>
+                    <option value="intramuscular">Intramuscular</option>
+                    <option value="subcutaneous">Subcutaneous</option>
+                    <option value="topical">Topical</option>
+                    <option value="inhalation">Inhalation</option>
+                </select>
+            </div>
+
+            <div>
+                <label className={labelClass}>Frequency / Instructions</label>
+                <input
+                    type="text"
+                    className={inputClass}
+                    name="frequency"
+                    value={medicationData.frequency}
+                    onChange={handleResourceChange}
+                    placeholder="e.g. Twice daily"
+                />
+            </div>
+
+            <div>
+                <label className={labelClass}>Quantity</label>
+                <input
+                    type="number"
+                    className={inputClass}
+                    name="quantity"
+                    value={medicationData.quantity}
+                    onChange={handleResourceChange}
+                    placeholder="Quantity"
+                />
+            </div>
+
+            <div>
+                <label className={labelClass}>Refills Allowed</label>
+                <input
+                    type="number"
+                    className={inputClass}
+                    name="refills"
+                    value={medicationData.refills}
+                    onChange={handleResourceChange}
+                    placeholder="Number of refills"
+                />
+            </div>
+
+            <div>
+                <label className={labelClass}>Valid From</label>
+                <input
+                    type="date"
+                    className={inputClass}
+                    name="validFrom"
+                    value={medicationData.validFrom}
+                    onChange={handleResourceChange}
+                />
+            </div>
+
+            <div>
+                <label className={labelClass}>Valid Until</label>
+                <input
+                    type="date"
+                    className={inputClass}
+                    name="validUntil"
+                    value={medicationData.validUntil}
+                    onChange={handleResourceChange}
+                />
+            </div>
+
+            <div className="sm:col-span-2">
+                <label className={labelClass}>Reason for Medication</label>
+                <textarea
+                    className={inputClass}
+                    rows="3"
+                    name="reason"
+                    value={medicationData.reason}
+                    onChange={handleResourceChange}
+                    placeholder="Reason for medication"
+                />
+            </div>
+        </div>
+    </>
+);
+
+const renderObservationFields = () => (
+    <>
+        <h3 className={sectionTitleClass}>Observation Information</h3>
+
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+                <label className={labelClass}>Observation Name</label>
+                <input
+                    type="text"
+                    className={inputClass}
+                    name="name"
+                    value={observationData.name}
+                    onChange={handleResourceChange}
+                    placeholder="Observation name"
+                />
+            </div>
+
+            <div>
+                <label className={labelClass}>LOINC Code</label>
+                <input
+                    type="text"
+                    className={inputClass}
+                    name="loincCode"
+                    value={observationData.loincCode}
+                    onChange={handleResourceChange}
+                    placeholder="e.g. 2093-3"
+                />
+            </div>
+
+            <div>
+                <label className={labelClass}>Category</label>
+                <select
+                    className={inputClass}
+                    name="category"
+                    value={observationData.category}
+                    onChange={handleResourceChange}
+                >
+                    <option value="">Select category</option>
+                    <option value="laboratory">Laboratory</option>
+                    <option value="vital-signs">Vital Signs</option>
+                    <option value="exam">Exam</option>
+                    <option value="imaging">Imaging</option>
+                    <option value="social-history">Social History</option>
+                    <option value="survey">Survey</option>
+                </select>
+            </div>
+
+            <div>
+                <label className={labelClass}>Status</label>
+                <select
+                    className={inputClass}
+                    name="status"
+                    value={observationData.status}
+                    onChange={handleResourceChange}
+                >
+                    <option value="">Select status</option>
+                    <option value="registered">Registered</option>
+                    <option value="preliminary">Preliminary</option>
+                    <option value="final">Final</option>
+                    <option value="amended">Amended</option>
+                    <option value="corrected">Corrected</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="entered-in-error">Entered in Error</option>
+                    <option value="unknown">Unknown</option>
+                </select>
+            </div>
+
+            <div>
+                <label className={labelClass}>Observation Date</label>
+                <input
+                    type="datetime-local"
+                    className={inputClass}
+                    name="date"
+                    value={observationData.date}
+                    onChange={handleResourceChange}
+                />
+            </div>
+
+            <div>
+                <label className={labelClass}>Value</label>
+                <input
+                    type="number"
+                    step="any"
+                    className={inputClass}
+                    name="value"
+                    value={observationData.value}
+                    onChange={handleResourceChange}
+                    placeholder="Value"
+                />
+            </div>
+
+            <div>
+                <label className={labelClass}>Unit</label>
+                <input
+                    type="text"
+                    className={inputClass}
+                    name="unit"
+                    value={observationData.unit}
+                    onChange={handleResourceChange}
+                    placeholder="mg/dL, kg, etc."
+                />
+            </div>
+
+            <div>
+                <label className={labelClass}>Interpretation</label>
+                <select
+                    className={inputClass}
+                    name="interpretation"
+                    value={observationData.interpretation}
+                    onChange={handleResourceChange}
+                >
+                    <option value="">Select interpretation</option>
+                    <option value="N">Normal</option>
+                    <option value="L">Low</option>
+                    <option value="H">High</option>
+                    <option value="LL">Critical Low</option>
+                    <option value="HH">Critical High</option>
+                    <option value="A">Abnormal</option>
+                </select>
+            </div>
+
+            <div>
+                <label className={labelClass}>Reference Range Low</label>
+                <input
+                    type="number"
+                    step="any"
+                    className={inputClass}
+                    name="referenceRangeLow"
+                    value={observationData.referenceRangeLow}
+                    onChange={handleResourceChange}
+                    placeholder="Lower limit"
+                />
+            </div>
+
+            <div>
+                <label className={labelClass}>Reference Range High</label>
+                <input
+                    type="number"
+                    step="any"
+                    className={inputClass}
+                    name="referenceRangeHigh"
+                    value={observationData.referenceRangeHigh}
+                    onChange={handleResourceChange}
+                    placeholder="Upper limit"
+                />
+            </div>
+
+            <div className="sm:col-span-2">
+                <label className={labelClass}>Notes</label>
+                <textarea
+                    className={inputClass}
+                    rows="3"
+                    name="notes"
+                    value={observationData.notes}
+                    onChange={handleResourceChange}
+                    placeholder="Observation notes"
+                />
+            </div>
+        </div>
+    </>
+);
 
     const renderFields = () => {
         switch (resourceType) {
