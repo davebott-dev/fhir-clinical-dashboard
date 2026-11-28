@@ -1,0 +1,17 @@
+// use prisma-8
+model File {
+  id             Int      @id @default(autoincrement())
+  createdAt      DateTime @default(now())
+  fileName       String?
+  data           Bytes
+  patientId      String
+  practitionerId String
+}
+
+model Note {
+  id             Int      @id @default(autoincrement())
+  createdAt      DateTime @default(now())
+  patientId      String
+  practitionerId String
+  message        String
+}
