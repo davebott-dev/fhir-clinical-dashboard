@@ -15,8 +15,8 @@ async function main() {
         console.log('Connected to PostgreSQL!');
 
         const created = await db.orm.public.Note.create({
-            patientId: '123',
-            practitionerId: '234',
+            patientId: '291694',
+            practitionerId: '15122',
             message: 'This is a test note'
         });
 

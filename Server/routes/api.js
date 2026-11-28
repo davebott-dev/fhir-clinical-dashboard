@@ -1,8 +1,8 @@
-const express = require('express');
+import express from 'express';
+import multer from 'multer';
 const router = express.Router();
-const multer = require('multer');
 const upload = multer();
-const controller = require('../controllers/apiController');
+import * as controller from '../controllers/apiController.js';
 
 // READ routes
 router.get('/notes/:patientId', controller.getNotes);
@@ -12,6 +12,7 @@ router.get('/files/:patientId', controller.getFiles);
 router.post('/notes/create', controller.createNote);
 router.post('/files/upload', upload.single('file'), controller.uploadFile);
 
+// DELTE routes
 router.post('/note/:noteId/delete', controller.deleteNote);
 router.post('/file/:fileId/delete', controller.deleteFile);
 

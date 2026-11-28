@@ -5,10 +5,37 @@ import Button from '@mui/material/Button';
 
 function NotesModal({ open, handleClose,patientId }) {
     const [note, setNote] = useState('');
+    const [loading, setLoading] = useState(false);
+    const practitionerId = sessionStorage.selectedProvider
 
-    const handleSubmit = ()=> {
+    const handleSubmit = async()=> {
         // Handle note submission logic here
         console.log(`Note for patient ${patientId}: ${note}`);
+
+        setLoading(true);
+        try{
+            const response = await fetch(`http://localhost:5000/api/notes/create/`, {
+                method: 'POST',
+                headers: {
+                'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    patientId,
+                    practitionerId,
+                    message:note
+
+                })
+            })
+                const data = await response.json();
+        if(!response.ok) {
+                        throw new Error(`Failed to create medication request${response.statusText}`);
+                    }
+        } catch(error) {
+            console.error(error)
+        } finally{
+            setLoading(false);
+        }
+
         handleClose();
     }
 

@@ -1,12 +1,18 @@
 import 'dotenv/config'; // Load environment variables from .env file
 import express from 'express';
+import cors from 'cors';
 import {db} from './src/prisma/db.js'
 import apiRoute from './routes/api.js'
 
 const app = express();
 
+// middleware
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
+app.use(cors({
+  origin: 'http://localhost:5173',
+  methods:['GET', 'POST', 'PUT', 'DELETE']
+}))
 
 const PORT = process.env.PORT || 3000;
 

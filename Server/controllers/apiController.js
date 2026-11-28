@@ -1,21 +1,26 @@
 import {db} from '../src/prisma/db.js';
 
-    export const getNotes= async(req,res) => {
-        try{
-            const {patientId} = req.params;
+export const getNotes = async (req, res) => {
+    console.log('1. GET /notes request received');
 
-            const notes = await db.orm.public.Note.all({
-                where:{
-                    patientId
-                }
-            })
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({
-                error: "Failed to retrieve notes."
-            })
-        }
-    };
+    try {
+        const { patientId } = req.params;
+
+        const notes = await db.orm.public.Note
+            .where({ patientId })
+            .all();
+
+
+        return res.status(200).json(notes);
+
+    } catch (error) {
+        console.error('Database query failed:', error);
+
+        return res.status(500).json({
+            error: 'Failed to retrieve notes.'
+        });
+    }
+};
     
     export const createNote=  async(req,res) => {
         try{
@@ -26,6 +31,7 @@ import {db} from '../src/prisma/db.js';
                 practitionerId,
                 message
             });
+            console.log('note created')
             res.status(201).json(note);
         } catch(error) {
             console.error(error);
@@ -39,11 +45,7 @@ import {db} from '../src/prisma/db.js';
         try{
             const {patientId} = req.params; 
 
-            const files = await db.orm.public.File.all({
-                where:{
-                    patientId
-                }
-            })
+            const files = await db.orm.public.File.where({patientId}).all()
         } catch(error) {
             console.error(error);
             res.status(500).json({
@@ -72,10 +74,15 @@ import {db} from '../src/prisma/db.js';
         try{
             const {noteId} = req.params;
 
-            const delete = await db.orm.public.Note.delete({
+            const deleteItem = await db.orm.public.Note.delete({
                 where:{
                     noteId
                 }
+            })
+        }catch(error) {
+            console.error(error);
+            res.status(500).json({
+                error: "Failed to delete note"
             })
         }
     };
@@ -85,10 +92,15 @@ import {db} from '../src/prisma/db.js';
         try{
             const {fileId} = req.params;
 
-            const delete = await db.orm.public.File.delete({
+            const deleteItem = await db.orm.public.File.delete({
                 where:{
                     fileId
                 }
+            })
+        }catch(error) {
+            console.error(error);
+            res.status(500).json({
+                error: "Failed to delete file"
             })
         }
     };

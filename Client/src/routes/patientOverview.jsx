@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { useParams, useOutletContext } from 'react-router-dom';
 import { Chart, Title, YAxis } from '@highcharts/react';
 import { GaugeSeries } from '@highcharts/react/series/Gauge';
+import moment from 'moment';
 import AddIcon from '@mui/icons-material/Add';
 import IconButton from '@mui/material/IconButton';
 import NotesModal from '../components/notesModal.jsx';
+import { FileText, CalendarDays, UserRound, Trash2 } from 'lucide-react';
 
 function PatientOverview() {
   const { patientId } = useParams();
@@ -12,6 +14,9 @@ function PatientOverview() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [patientObservations, setPatientObservations] =useState([]);
+  const [notes, setNotes] = useState([]);
+  const [loadNotes, setLoadNotes] = useState(false);
+  const [practitionerNames, setPractitionerNames] =useState([]);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
@@ -34,6 +39,73 @@ function PatientOverview() {
     };
       fetchData();
   }, [patient?.id]);
+
+  // fetch notes using my api route
+  useEffect(() => {
+    const fetchNotes = async () => {
+      setLoadNotes(true);
+
+      try{
+        const response = await fetch(`http://localhost:5000/api/notes/${patientId}`);
+        if(!response.ok) {
+          throw new Error("Failed to fetch notes for this patient.");
+        }
+        const data = await response.json();
+        console.log("notes", data);
+        setNotes(data);
+      }catch(error) {
+        console.error(error);
+      } finally{
+        setLoadNotes(false);
+      }
+    }
+    fetchNotes();
+  },[notes.length]);
+
+// useEffect method refined with help of AI
+useEffect(() => {
+    const fetchPractitioners = async () => {
+        const practitionerIds = [
+            ...new Set(notes.map(note => note.practitionerId))
+        ];
+
+        try {
+            const results = await Promise.all(
+                practitionerIds.map(async (id) => {
+                    const response = await fetch(
+                        `https://hapi.fhir.org/baseR4/Practitioner/${id}`
+                    );
+
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch practitioner ${id}`);
+                    }
+
+                    const data = await response.json();
+
+                    return {
+                        id,
+                        name: data.name?.[0]
+                            ? `${data.name[0].given?.join(' ') || ''} ${data.name[0].family || ''}`.trim()
+                            : 'Unknown Practitioner'
+                    };
+                })
+            );
+
+            const names = Object.fromEntries(
+                results.map(item => [item.id, item.name])
+            );
+
+            setPractitionerNames(names);
+
+        } catch (error) {
+            console.error('Error fetching practitioners:', error);
+        }
+    };
+
+    if (notes.length > 0) {
+        fetchPractitioners();
+    }
+}, [notes]);
 
   // storing data in varaibles for easier access 
 
@@ -145,7 +217,7 @@ function PatientOverview() {
   }
 
 
-
+// tailwind css generated with help of GenAI
   return (
     <main className="space-y-6">
       {/* Snapshot and Demographics */}
@@ -333,14 +405,71 @@ function PatientOverview() {
           </IconButton>
         }
      > 
-        <div className="py-8 text-center">
-          <p className="text-sm font-medium text-slate-600">
-            No patient notes available.
-          </p>
-          <p className="mt-1 text-xs text-slate-400">
-            Patient documentation will appear here when available.
-          </p>
+
+<div className="space-y-4 py-6">
+    {notes.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100">
+                <FileText className="h-6 w-6 text-slate-400" />
+            </div>
+
+            <p className="text-sm font-semibold text-slate-700">
+                No patient notes available
+            </p>
+
+            <p className="mt-1 max-w-sm text-xs leading-5 text-slate-500">
+                Patient documentation will appear here when notes are added.
+            </p>
         </div>
+    ) : (
+        notes.map((note) => (
+            <div
+                key={note.id}
+                className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+            >
+               <div className="flex items-start justify-between gap-4">
+    <div className="min-w-0 flex-1">
+        <div className="mb-3 flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50">
+                <FileText className="h-4 w-4 text-blue-600" />
+            </span>
+
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Clinical Note
+            </span>
+        </div>
+
+        <p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">
+            {note.message}
+        </p>
+    </div>
+
+    <button
+        onClick={() => handleDeleteNote(note.id)}
+        className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+        title="Delete note"
+        aria-label="Delete note"
+    >
+        <Trash2 className="h-4 w-4" />
+    </button>
+</div>
+
+                <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-slate-100 pt-3 text-xs text-slate-500">
+                    <span className="flex items-center gap-1.5">
+                        <CalendarDays className="h-3.5 w-3.5" />
+                        {moment(note.createdAt).format("MMM DD, YYYY hh:mm A")}
+                    </span>
+
+                    <span className="flex items-center gap-1.5">
+                        <UserRound className="h-3.5 w-3.5" />
+                        Practitioner: {practitionerNames[note.practitionerId] || 'Loading...'}
+                    </span>
+                </div>
+            </div>
+        ))
+    )}
+</div>
+
       </Card>
       <NotesModal open={open} handleClose={handleClose} patientId={patientId} />
 
