@@ -1,15 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const {PrismaClient} = require('@prisma/orm-postgres');
-const prisma = new PrismaClient();
 const multer = require('multer');
 const upload = multer();
 const controller = require('../controllers/apiController');
 
-router.get('/notes', controller.getNotes);
-router.get('/files', controller.getFiles);
+// READ routes
+router.get('/notes/:patientId', controller.getNotes);
+router.get('/files/:patientId', controller.getFiles);
 
+// CREATE routes
 router.post('/notes/create', controller.createNote);
-router.post('files/upload', upload.single('file'), controller.uploadFile);
+router.post('/files/upload', upload.single('file'), controller.uploadFile);
 
-module.exports = router;
+router.post('/note/:noteId/delete', controller.deleteNote);
+router.post('/file/:fileId/delete', controller.deleteFile);
+
+export default router;
